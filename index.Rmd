@@ -68,7 +68,7 @@ data <- bind_cols(cleaned, as.data.frame(result$scores))
     1 = sehr geringer KUT
     6 = sehr hoher KUT
 -->
-```{r}
+```{r KUT}
 
 kut_df <- cleaned %>% select(starts_with("kut"))
 
@@ -80,8 +80,12 @@ kut_df <- cleaned %>% select(starts_with("kut"))
 
 keys_bf  <- list(KUT = c("-kut_1", "-kut_2", "kut_3", "-kut_4", "-kut_5", "-kut_6", "kut_7", "kut_8", "kut_9", "kut_10"))
 
+result_alpha <- psych::alpha(kut_df, check.keys = TRUE)
+result_alpha
+
 result <- psych::scoreItems(keys = keys_bf , kut_df)
 result
+
 #result$scores
 
 data_kut <- bind_cols(cleaned, as.data.frame(result$scores))
@@ -91,7 +95,7 @@ data_kut <- bind_cols(cleaned, as.data.frame(result$scores))
       1 = sehr geringes Vertrauen in die Privatsphäre
       6 = sehr großes Vertrauen in der Privatsphäre
 -->
-```{r}
+```{r Privacy_RS}
 
 privacy_df <- cleaned %>% select(starts_with("RS_privacy"))
 
@@ -102,6 +106,9 @@ privacy_df <- cleaned %>% select(starts_with("RS_privacy"))
 
 keys_bf  <- list(RS_Privacy_Consern = c("-RS_privacy_1","-RS_privacy_2","RS_privacy_3","-RS_privacy_4","RS_privacy_5"))
 
+result_alpha <- psych::alpha(privacy_df, check.keys = TRUE)
+result_alpha
+
 result <- psych::scoreItems(keys = keys_bf , privacy_df)
 result
 result$scores
@@ -109,19 +116,59 @@ result$scores
 data_priv <- bind_cols(cleaned, as.data.frame(result$scores))
 ```
 
-<!--- Auswertung Bewertungen Systemanlernen
+<!--- Auswertung Bewertungen Anlernen
       1 = sehr schlecht
       5 = sehr gut
 -->
-```{r}
-
+```{r Bewertung_Anlernung}
 anlernen_df <- cleaned %>% select(starts_with("Anlernen"))
 
-keys_bf  <- list(Anlernen_RS_Bewertung = c("Anlernen1_1","Anlernen2_1","Anlernen3_1","Anlernen4_1","Anlernen5_1","Anlernen6_1","Anlernen7_1"))
+keys_bf  <- list(Anlernen_Artikel_Bewertungen = c("Anlernen1_1","Anlernen2_1","Anlernen3_1","Anlernen4_1","Anlernen5_1","Anlernen6_1","Anlernen7_1"))
+
+result_alpha <- psych::alpha(anlernen_df, check.keys = TRUE)
+result_alpha
 
 result <- psych::scoreItems(keys = keys_bf , anlernen_df)
 result
 #result$scores
 
 data_anlernen <- bind_cols(cleaned, as.data.frame(result$scores))
+```
+
+<!--- Auswertung Bewertungen UBCF Artikel
+      1 = sehr schlecht
+      5 = sehr gut
+-->
+```{r Bewertung_UBCF}
+UBCF_df <- cleaned %>% select(starts_with("loop1"))
+
+keys_bf  <- list(UBCF_Artikel_Bewertungen = c("loop1.1_1","loop1.2_1","loop1.3_1","loop1.4_1"))
+
+result_alpha <- psych::alpha(UBCF_df, check.keys = TRUE)
+result_alpha
+
+result <- psych::scoreItems(keys = keys_bf , UBCF_df)
+result
+#result$scores
+
+data_UBCF <- bind_cols(cleaned, as.data.frame(result$scores))
+```
+
+<!--- Auswertung Bewertungen SVD Artikel
+      1 = sehr schlecht
+      5 = sehr gut
+-->
+```{r Bewertung_UBCF}
+SVD_df <- cleaned %>% select(starts_with("loop2"))
+
+keys_bf  <- list(UBCF_Artikel_Bewertungen = c("loop2.1_1","loop2.2_1","loop2.3_1","loop2.4_1"))
+
+result_alpha <- psych::alpha(SVD_df, check.keys = TRUE)
+result_alpha
+
+result <- psych::scoreItems(keys = keys_bf , SVD_df)
+result
+result$scores
+
+data_SVD <- bind_cols(cleaned, as.data.frame(result$scores))
 ```
