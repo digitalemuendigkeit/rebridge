@@ -236,3 +236,91 @@ Aus den Bewertungen der einzelnen Artikeln, die das SVD-Empfehlungssystem den Pr
 Aus drei der sieben Aussagen zur Gesamtbewertung der Artikel des SVD-Empfehlungssystems, wurde ein Durchschnittswert berechnet, wie gut den Probanden die Artikel gefallen haben. Dieser Durchschnitsswert hat eine sehr gute Reliabilität von ($\alpha =$ `r result$alpha[2]`). Die anderen Aussagen decken andere Dimensionen ab und werden deswegen einzeln weiter betrachtet.
 
 Die Zusammenfassung der Scala, wie gut die Probanden das UBCF-Empfehlungssystem finden, weißt mit ($\alpha =$ `r result$alpha[3]`) eine gute Reliabilität auf.
+
+# Deskriptive Statistik 
+```{r}
+data_demograph  %>% ggplot() + 
+                    aes(x = factor(gender)) + 
+                    geom_bar(width=.5) + 
+                    scale_x_discrete(labels=c(`1` = "männlich", `2` = "weiblich")) +
+                    coord_flip()
+```
+
+## Geschlecht
+Die Teilnehmer der Umfrage waren zu:
+
+* `r table(data_demograph$gender)[2]/length(data_demograph$gender)*100` % weiblich
+* `r table(data_demograph$gender)[1]/length(data_demograph$gender)*100` % männlich
+* `r table(data_demograph$gender)[0]/length(data_demograph$gender)*100`0 % divers
+
+## Alter
+```{r}
+data_demograph  %>% ggplot() + 
+                    aes(x = as.numeric(age), fill = factor(gender)) + 
+                    geom_bar(position = "stack") + 
+                    xlab("Alter") + 
+                    ylab("Anzahl") + 
+                    scale_fill_discrete(name="Geschlecht",labels=c("männlich", "weiblich"))
+
+psych::describeBy(data_demograph$age, data_demograph$gender)
+data_demograph %>% ggplot() + aes(x=as.factor(gender), y=as.numeric(age)) + stat_summary() + stat_ydensity()
+```
+
+## Schulbildung
+```{r}
+data_demograph  %>% ggplot() + 
+                    aes(x = factor(school), fill = factor(gender)) + 
+                    geom_bar(position = "dodge") + 
+                    scale_x_discrete(labels=c(`1` = "keine Schulausbildung", `2` = "Volks-/Hauptschulabschluss", `3` = "Realschulabschluss", `4` = "(Fach-)Abitur", `5` = "Sonstiges")) +
+                    ylab("Anzahl") + 
+                    scale_fill_discrete(name="Geschlecht",labels=c("männlich", "weiblich")) +
+                    coord_flip()
+```
+
+Von den Befragten haben:
+
+* `r table(data_demograph$school)[1]/length(data_demograph$school)*100` % (noch) keine Schulabschluss
+* `r table(data_demograph$school)[2]/length(data_demograph$school)*100` % einen Hauptschulabschluss
+* `r table(data_demograph$school)[3]/length(data_demograph$school)*100` % einen Realschulabschluss 
+* `r table(data_demograph$school)[4]/length(data_demograph$school)*100` % das (Fach-)Abitur
+
+## Berufsausbildung
+```{r}
+data_demograph  %>% ggplot() + 
+                    aes(x = factor(education), fill = factor(gender)) + 
+                    geom_bar(position = "dodge") + 
+                    scale_x_discrete(labels=c(`1` = "keine Ausbildung/Studium abgeschlossen", `2` = "Ausbildung", `3` = "Meister", `4` = "Hochschulabschluss", `5` = "Promotion", `6` = "Sonstiges")) +
+                    ylab("Anzahl") + 
+                    scale_fill_discrete(name="Geschlecht",labels=c("männlich", "weiblich")) +
+                    coord_flip()
+```
+
+Von den Befragten haben:
+
++ `r table(data_demograph$education)[1]/length(data_demograph$education)*100` % noch keine Ausbildung/ kein Studium abgeschlossen
++ `r table(data_demograph$school)[2]/length(data_demograph$school)*100` % eine Ausbildung abgeschlossen
++ `r table(data_demograph$school)[3]/length(data_demograph$school)*100` % einen Meister gemacht
++ `r table(data_demograph$school)[4]/length(data_demograph$school)*100` % einen Hochschulabschluss erworben
++ `r table(data_demograph$school)[5]/length(data_demograph$school)*100` % promoviert
+
+## KUT
+ Der KUT der Befragten ist mittelmäßig stark ausgeprägt: `r apastats::describe.mean.sd(data_kut$KUT)`
+ 
+## Internetportale
+Von den Befragten nutzen:
+
+* `r table(data_newsConsum$newsPortal_1)/length(data_newsConsum$ResponseId)*100` % die Internetportale des öffentlich-rechtlichen Rundfunks
+* `r table(data_newsConsum$newsPortal_2)/length(data_newsConsum$ResponseId)*100` % die Internetportale überregionaler Zeitungen
+* `r table(data_newsConsum$newsPortal_3)/length(data_newsConsum$ResponseId)*100` % die Internetportale regionaler Zeitungen
+* `r table(data_newsConsum$newsPortal_4)/length(data_newsConsum$ResponseId)*100` % Online-Nachrichtenportale
+* `r table(data_newsConsum$newsPortal_5)/length(data_newsConsum$ResponseId)*100` % Suchmaschinen
+* `r table(data_newsConsum$newsPortal_6)/length(data_newsConsum$ResponseId)*100` % Soziale Netwerke
+* `r table(data_newsConsum$newsPortal_7)/length(data_newsConsum$ResponseId)*100` % sonstige Quellen
+
+um an neue Informationen zu gelangen.
+
+
+
+
+
+
