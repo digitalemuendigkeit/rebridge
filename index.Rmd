@@ -247,14 +247,37 @@ data_demograph  %>% ggplot() +
 ```
 
 ## Geschlecht
+
+```{r gender}
+# Definiere Geschlechter und Nutzeranzahl
+male <-  table(data_demograph$gender)[1]
+female <- table(data_demograph$gender)[2]r
+divers <- table(data_demograph$gender)[0]
+user <- length(data_demograph$ResponseId)
+```
+
 Die Teilnehmer der Umfrage waren zu:
 
-* `r table(data_demograph$gender)[2]/length(data_demograph$gender)*100` % weiblich
-* `r table(data_demograph$gender)[1]/length(data_demograph$gender)*100` % männlich
-* `r table(data_demograph$gender)[0]/length(data_demograph$gender)*100`0 % divers
+* `r female/user*100` % weiblich
+* `r male/user*100` % männlich
+* `r divers/user*100`0 % divers
 
 ## Alter
 ```{r}
+# Alter der Probanden gruppiert #
+#   <= 21 Jahre → Gruppe 1      #
+# 22 - 35 Jahre → Gruppe 2      #
+# 36 - 50 Jahre → Gruppe 3      #
+# 50 - 64 Jahre → Gruppe 5      # 
+#    > 65 Jahre → Gruppe 6      #
+
+data_demograph <- data_demograph %>% mutate(age_grp = case_when(age < 22 ~ 1, 
+                                                   age < 35 ~ 2,
+                                                   age < 50 ~ 3,
+                                                   age < 65 ~ 4,
+                                                   age >= 65 ~ 5))
+
+# Grafische Darstellung
 data_demograph  %>% ggplot() + 
                     aes(x = as.numeric(age), fill = factor(gender)) + 
                     geom_bar(position = "stack") + 
@@ -279,10 +302,10 @@ data_demograph  %>% ggplot() +
 
 Von den Befragten haben:
 
-* `r table(data_demograph$school)[1]/length(data_demograph$school)*100` % (noch) keine Schulabschluss
-* `r table(data_demograph$school)[2]/length(data_demograph$school)*100` % einen Hauptschulabschluss
-* `r table(data_demograph$school)[3]/length(data_demograph$school)*100` % einen Realschulabschluss 
-* `r table(data_demograph$school)[4]/length(data_demograph$school)*100` % das (Fach-)Abitur
+* `r table(data_demograph$school)[1]/user*100` % (noch) keine Schulabschluss
+* `r table(data_demograph$school)[2]/user*100` % einen Hauptschulabschluss
+* `r table(data_demograph$school)[3]/user*100` % einen Realschulabschluss 
+* `r table(data_demograph$school)[4]/user*100` % das (Fach-)Abitur
 
 ## Berufsausbildung
 ```{r}
@@ -290,34 +313,73 @@ data_demograph  %>% ggplot() +
                     aes(x = factor(education), fill = factor(gender)) + 
                     geom_bar(position = "dodge") + 
                     scale_x_discrete(labels=c(`1` = "keine Ausbildung/Studium abgeschlossen", `2` = "Ausbildung", `3` = "Meister", `4` = "Hochschulabschluss", `5` = "Promotion", `6` = "Sonstiges")) +
+                    xlab("Abschluss") +
                     ylab("Anzahl") + 
                     scale_fill_discrete(name="Geschlecht",labels=c("männlich", "weiblich")) +
-                    coord_flip()
+                    coord_flip()Variablen f
 ```
 
 Von den Befragten haben:
 
-+ `r table(data_demograph$education)[1]/length(data_demograph$education)*100` % noch keine Ausbildung/ kein Studium abgeschlossen
-+ `r table(data_demograph$school)[2]/length(data_demograph$school)*100` % eine Ausbildung abgeschlossen
-+ `r table(data_demograph$school)[3]/length(data_demograph$school)*100` % einen Meister gemacht
-+ `r table(data_demograph$school)[4]/length(data_demograph$school)*100` % einen Hochschulabschluss erworben
-+ `r table(data_demograph$school)[5]/length(data_demograph$school)*100` % promoviert
++ `r table(data_demograph$education)[1]/user*100` % noch keine Ausbildung/ kein Studium abgeschlossen
++ `r table(data_demograph$school)[2]/user*100` % eine Ausbildung abgeschlossen
++ `r table(data_demograph$school)[3]/user*100` % einen Meister gemacht
++ `r table(data_demograph$school)[4]/user*100` % einen Hochschulabschluss erworben
++ `r table(data_demograph$school)[5]/user*100` % promoviert
 
 ## KUT
- Der KUT der Befragten ist mittelmäßig stark ausgeprägt: `r apastats::describe.mean.sd(data_kut$KUT)`
+```{r}
+data_KUT_gender <- inner_join(data_demograph, data_kut, by="ResponseId") %>% select(gender,KUT)
+
+cor(data_KUT_gender$gender, data_KUT_gender$KUT)
+
+KUT_male <- data_KUT_gender %>% filter(gender == 1) %>% select(KUT)
+KUT_female <- data_KUT_gender %>% filter(gender == 2) %>% select(KUT)
+describe.mean.sd(KUT_male$KUT)
+describe.mean.sd(KUT_female$KUT)
+describe.mean.sd(data_kut$KUT)
+```
+
+Der KUT der Befragten ist mittelmäßig stark ausgeprägt: `r describe.mean.sd(data_kut$KUT)`. Bei der Betrachtung der Geschlechter ist erkennbar, dass die männlichen Befragten einen höherne KUT (`r describe.mean.sd(KUT_male$KUT)`) als die Frauen (`r describe.mean.sd(KUT_female$KUT)`) haben.
  
 ## Internetportale
+
+```{r}
+# Portal 1
+portal1_gender <- table(data_newsConsum$newsPortal_1, data_demograph$gender)
+sum(portal1_gender)/user
+portal1_gender[,1]/male
+portal1_gender[,2]/female
+```
+
+
 Von den Befragten nutzen:
 
-* `r table(data_newsConsum$newsPortal_1)/length(data_newsConsum$ResponseId)*100` % die Internetportale des öffentlich-rechtlichen Rundfunks
-* `r table(data_newsConsum$newsPortal_2)/length(data_newsConsum$ResponseId)*100` % die Internetportale überregionaler Zeitungen
-* `r table(data_newsConsum$newsPortal_3)/length(data_newsConsum$ResponseId)*100` % die Internetportale regionaler Zeitungen
-* `r table(data_newsConsum$newsPortal_4)/length(data_newsConsum$ResponseId)*100` % Online-Nachrichtenportale
-* `r table(data_newsConsum$newsPortal_5)/length(data_newsConsum$ResponseId)*100` % Suchmaschinen
-* `r table(data_newsConsum$newsPortal_6)/length(data_newsConsum$ResponseId)*100` % Soziale Netwerke
-* `r table(data_newsConsum$newsPortal_7)/length(data_newsConsum$ResponseId)*100` % sonstige Quellen
+* `r table(data_newsConsum$newsPortal_1)/user*100` % die Internetportale des öffentlich-rechtlichen Rundfunks
+* `r table(data_newsConsum$newsPortal_2)/user*100` % die Internetportale überregionaler Zeitungen
+* `r table(data_newsConsum$newsPortal_3)/user*100` % die Internetportale regionaler Zeitungen
+* `r table(data_newsConsum$newsPortal_4)/user*100` % Online-Nachrichtenportale
+* `r table(data_newsConsum$newsPortal_5)/user*100` % Suchmaschinen
+* `r table(data_newsConsum$newsPortal_6)/user*100` % Soziale Netwerke
+* `r table(data_newsConsum$newsPortal_7)/user*100` % sonstige Quellen
 
 um an neue Informationen zu gelangen.
+
+## Internetportale Nutzungszeit
+```{r}
+# 
+apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_1)
+apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_2)
+apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_3)
+apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_4)
+apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_5)
+apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_6)
+
+# Genderunterschied
+portal1_gender <- table(data_newsConsum$newsPortalFrequency_1, data_demograph$gender) 
+portal1_gender[,1]/male*100
+portal1_gender[,2]/female*100
+```
 
 
 
