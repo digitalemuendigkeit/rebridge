@@ -1,0 +1,73 @@
+---
+title: "Code-Archiv"
+author: "Stefan"
+date: "8 11 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(haven)
+library(sjPlot)
+library(sjlabelled)
+library(kableExtra)
+library(knitr)
+library(apastats)
+```
+
+```{r}
+data_demograph  %>% ggplot() + 
+                    aes(x = factor(school), fill = factor(gender)) + 
+                    geom_bar(position = "dodge",) + 
+                    scale_x_discrete(labels=c(`1` = "keine Schulausbildung", `2` = "Volks-/Hauptschulabschluss", `3` = "Realschulabschluss", `4` = "(Fach-)Abitur", `5` = "Sonstiges")) +
+                    ylab("Anzahl") + 
+                    scale_fill_discrete(name="Geschlecht",labels=c("männlich", "weiblich")) +
+                    coord_flip() 
+```
+
+```{r}
+# x- Achse: school
+# y- Achse: ..prop.. → Wahrscheinlichkeiten
+# facet_grid → teilt den Graph in mehrere Teile
+# fill: färbt die Skalen ein, fügt Farb-Legende hinzu.
+# geom_text: fügt Beschriftungen an einzelnen Balken hinzu.
+
+ggplot(data=data_demograph, aes(x=school)) + 
+    geom_bar(aes(y = ..prop.., fill = factor(..x..))) +
+    geom_text(aes( label = scales::percent(..prop..), y= ..prop.. ), stat= "count", vjust = -0.1) +
+    labs(y = "Prozent", x="") +
+    coord_cartesian(ylim=c(0,0.8))+
+    scale_fill_discrete(name= "Abschluss", guide = guide_legend(reverse = TRUE), labels = c("keine Schulausbildung",
+                                                            "Volks-/Hauptschulabschluss",
+                                                            "Realschulabschluss",
+                                                            "(Fach-)Abitur",
+                                                            "Sonstiges")) +
+    facet_grid(data_demograph$gender, labeller = as_labeller(c(`1` = "männlich", `2` = "weiblich"))) +
+    scale_y_continuous(labels = scales::percent) +
+    scale_x_discrete()
+```
+
+# Gestaltung ggplot B
+```{r}
+data_demograph  %>% ggplot(aes(x = school,
+                               y = ..prop..,
+                               fill = factor(gender))) + 
+                    geom_bar(position = "dodge") + 
+                    geom_text(aes(label = scales::percent(..prop..),      y= ..prop.. ),
+                              stat= "count", position = position_dodge(width = 1), hjust = -0.1) +
+                    labs(y = "Anzahl", x="Abschluss") +
+                    scale_fill_manual(values = c("skyblue","royalblue"),
+                                      name="Geschlecht",
+                                      labels=c("männlich", "weiblich")) +
+                    guides(fill = guide_legend(reverse = TRUE)) +
+                    coord_flip(ylim=c(0,0.8))+
+                    scale_x_reverse(breaks = 1:5,labels = c("keine Schulausbildung",
+                                                            "Volks-/Hauptschulabschluss",
+                                                            "Realschulabschluss",
+                                                            "(Fach-)Abitur",
+                                                            "Sonstiges")) +
+                    scale_y_continuous(labels = scales::percent)
+
+
+```
