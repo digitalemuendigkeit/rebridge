@@ -250,10 +250,10 @@ data_demograph  %>% ggplot() +
 
 ```{r gender}
 # Definiere Geschlechter und Nutzeranzahl
-male <-  table(data_demograph$gender)[1]
+male   <- table(data_demograph$gender)[1]
 female <- table(data_demograph$gender)[2]
 divers <- table(data_demograph$gender)[0]
-user <- length(data_demograph$ResponseId)
+user   <- length(data_demograph$ResponseId)
 ```
 
 Die Teilnehmer der Umfrage waren zu:
@@ -279,11 +279,13 @@ data_demograph <- data_demograph %>% mutate(age_grp = case_when(age < 22 ~ 1,
 
 # Grafische Darstellung
 data_demograph  %>% ggplot() + 
-                    aes(x = as.numeric(age), fill = factor(gender)) + 
-                    geom_bar(position = "stack") + 
+                    aes(x = as.numeric(age), 
+                        fill = factor(gender)) + 
+                    geom_histogram(position = "stack", binwidth = 1) + 
                     xlab("Alter") + 
                     ylab("Anzahl") + 
-                    scale_fill_discrete(name="Geschlecht",labels=c("männlich", "weiblich"))
+                    scale_fill_discrete(name="Geschlecht",
+                                        labels=c("männlich", "weiblich"))
 
 psych::describeBy(data_demograph$age, data_demograph$gender)
 data_demograph %>% ggplot() + aes(x=as.factor(gender), y=as.numeric(age)) + stat_summary() + stat_ydensity()
@@ -357,6 +359,16 @@ Von den Befragten haben:
 
 ## KUT
 ```{r}
+# Mittelwert für einen Wert gruppiert anzeigen:
+tapply(data_kut$KUT, data_demograph$age_grp, mean)
+
+# Ausführliche Ausgabe mithilfe von psych:
+psych::describeBy(data_kut$KUT, data_demograph$age_grp)
+
+kut_age_aov <- aov(data_kut$KUT ~ data_demograph$age_grp)
+
+describe.aov(kut_age_aov)
+
 data_KUT_gender <- inner_join(data_demograph, data_kut, by="ResponseId") %>% select(gender,KUT)
 
 cor(data_KUT_gender$gender, data_KUT_gender$KUT)
@@ -368,7 +380,9 @@ describe.mean.sd(KUT_female$KUT)
 describe.mean.sd(data_kut$KUT)
 ```
 
-Der KUT der Befragten ist mittelmäßig stark ausgeprägt: `r describe.mean.sd(data_kut$KUT)`. Bei der Betrachtung der Geschlechter ist erkennbar, dass die männlichen Befragten einen höherne KUT (`r describe.mean.sd(KUT_male$KUT)`) als die Frauen (`r describe.mean.sd(KUT_female$KUT)`) haben.
+Der KUT der Befragten ist mittelmäßig stark ausgeprägt: `r describe.mean.sd(data_kut$KUT)`. Bei der Betrachtung der Geschlechter ist erkennbar, dass die männlichen Befragten einen stark signifikat höherne KUT (`r describe.mean.sd(KUT_male$KUT)`) als die Frauen (`r describe.mean.sd(KUT_female$KUT)`) haben (`r describe.ttest(t.test(data_kut$KUT,data_demograph$gender))`).
+Zwischen den Altersgruppen hingegen ist kein signifikanter Unterschied beim KUT erkennbar (`r describe.aov(kut_age_aov)`)
+
  
 ## Internetportale
 
@@ -409,8 +423,19 @@ portal1_gender[,1]/male*100
 portal1_gender[,2]/female*100
 ```
 
+## Einstellung Privatsphäre von RS
 
+```{r}
+# Gesamter Mittelwert 
+describe.mean.sd(data_priv$RS_Privacy_Consern)
 
+# Mittelwert nach Geschlecht
+psych::describeBy(data_priv$RS_Privacy_Consern, data_demograph$gender, mat = TRUE)
+describe.ttest(t.test(data_priv$RS_Privacy_Consern ~ data_demograph$gender))
 
+# Mittelwert nach Altersgruppe
+psych::describeBy(data_priv$RS_Privacy_Consern, data_demograph$age_grp, mat = TRUE)
+describe.aov(aov(data_priv$RS_Privacy_Consern ~ data_demograph$age_grp))
 
+```
 
