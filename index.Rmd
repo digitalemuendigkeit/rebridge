@@ -237,8 +237,8 @@ Aus drei der sieben Aussagen zur Gesamtbewertung der Artikel des SVD-Empfehlungs
 
 Die Zusammenfassung der Scala, wie gut die Probanden das UBCF-Empfehlungssystem finden, weißt mit ($\alpha =$ `r result$alpha[3]`) eine gute Reliabilität auf.
 
-# Deskriptive Statistik 
-```{r}
+# Stichprobenbeschreibung
+```{r  gender_graph}
 data_demograph  %>% ggplot() + 
                     aes(x = factor(gender)) + 
                     geom_bar(width=.5) + 
@@ -248,7 +248,7 @@ data_demograph  %>% ggplot() +
 
 ## Geschlecht
 
-```{r gender}
+```{r gender_describe}
 # Definiere Geschlechter und Nutzeranzahl
 male   <- table(data_demograph$gender)[1]
 female <- table(data_demograph$gender)[2]
@@ -263,7 +263,7 @@ Die Teilnehmer der Umfrage waren zu:
 * `r divers/user*100`0 % divers
 
 ## Alter
-```{r}
+```{r age_group}
 # Alter der Probanden gruppiert #
 #   <= 21 Jahre → Gruppe 1      #
 # 22 - 35 Jahre → Gruppe 2      #
@@ -276,6 +276,9 @@ data_demograph <- data_demograph %>% mutate(age_grp = case_when(age < 22 ~ 1,
                                                                 age  < 50 ~ 3,
                                                                 age  < 65 ~ 4,
                                                                 age >= 65 ~ 5))
+```
+
+```{r age_graph}
 
 # Grafische Darstellung
 data_demograph  %>% ggplot() + 
@@ -292,14 +295,14 @@ data_demograph %>% ggplot() + aes(x=as.factor(gender), y=as.numeric(age)) + stat
 ```
 
 ## Schulbildung
-```{r}
+```{r school_graph}
 data_demograph  %>% ggplot(aes(x = school, 
                                y = ..prop..,
                                fill = factor(gender))) + 
                     geom_bar(position = "dodge") + 
                     geom_text(aes(label = scales::percent(..prop..),      y= ..prop.. ),
                               stat= "count", position = position_dodge(width = 1), hjust = -0.1) +
-                    labs(y = "Anzahl", x="Abschluss") +
+                    labs(y = "Anteil in %", x="Abschluss") +
                     scale_fill_manual(values = c("skyblue","royalblue"),
                                       name="Geschlecht",
                                       labels=c("männlich", "weiblich")) +
@@ -323,14 +326,14 @@ Die Befragten haben alle ein sehr hohes Bildungsniveau. Insgesamt besitzen `r ta
 
 
 ## Berufsausbildung
-```{r}
+```{r education_graph}
 data_demograph  %>% ggplot(aes(x = education, 
                                y = ..prop..,
                                fill = factor(gender))) + 
                     geom_bar(position = "dodge") + 
                     geom_text(aes(label = scales::percent(..prop..), y= ..prop.. ),
                               stat= "count", position = position_dodge(width = 1), hjust = -0.1) +
-                    labs(y = "Anzahl", x="Abschluss") +
+                    labs(y = "Anteil in %", x="Abschluss") +
                     scale_fill_manual(values = c("skyblue","royalblue"),
                                       name="Geschlecht",
                                       labels=c("männlich", "weiblich")) +
@@ -358,17 +361,7 @@ Von den Befragten haben:
 
 
 ## KUT
-```{r}
-# Mittelwert für einen Wert gruppiert anzeigen:
-tapply(data_kut$KUT, data_demograph$age_grp, mean)
-
-# Ausführliche Ausgabe mithilfe von psych:
-psych::describeBy(data_kut$KUT, data_demograph$age_grp)
-
-kut_age_aov <- aov(data_kut$KUT ~ data_demograph$age_grp)
-
-describe.aov(kut_age_aov)
-
+```{r KUT_describe}
 data_KUT_gender <- inner_join(data_demograph, data_kut, by="ResponseId") %>% select(gender,KUT)
 
 cor(data_KUT_gender$gender, data_KUT_gender$KUT)
@@ -381,51 +374,138 @@ describe.mean.sd(data_kut$KUT)
 ```
 
 Der KUT der Befragten ist mittelmäßig stark ausgeprägt: `r describe.mean.sd(data_kut$KUT)`. Bei der Betrachtung der Geschlechter ist erkennbar, dass die männlichen Befragten einen stark signifikat höherne KUT (`r describe.mean.sd(KUT_male$KUT)`) als die Frauen (`r describe.mean.sd(KUT_female$KUT)`) haben (`r describe.ttest(t.test(data_kut$KUT,data_demograph$gender))`).
-Zwischen den Altersgruppen hingegen ist kein signifikanter Unterschied beim KUT erkennbar (`r describe.aov(kut_age_aov)`)
-
  
 ## Internetportale
 
-```{r}
+```{r internetportal_trash}
 # Portal 1
-portal1_gender <- table(data_newsConsum$newsPortal_1, data_demograph$gender)
-sum(portal1_gender)/user
-portal1_gender[,1]/male
-portal1_gender[,2]/female
+#portal1_gender <- table(data_newsConsum$newsPortal_1, data_demograph$gender)
+#sum(portal1_gender)/user
+#portal1_gender[,1]/male
+#portal1_gender[,2]/female
 ```
 
+<!--- 1 =	mehrmals täglich			
+      2	= 1-mal pro Tag			
+      3	= 4- bis 6-mal pro Woche			
+      4 =	2- bis 3-mal pro Woche			
+      5	= 1-mal pro Woche			
+      6	= 2- bis 3-mal pro Monat			
+      7	= 1-mal pro Monat			
+      8	= seltener als 1-mal pro Monat --> 
 
+```{r internetport_description}
+data_newsConsumTest <- inner_join(data_newsConsum, data_demograph, by="ResponseId") %>% select(ResponseId,gender, age_grp,starts_with("news"))
+
+# Anteil Nutzung
+#apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_1)
+#apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_2)
+#apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_3)
+#apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_4)
+#apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_5)
+#apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_6)
+
+# Genderunterschied
+#describe.ttest(t.test(data_newsConsum$newsPortalFrequency_1 ~ data_demograph$gender))
+describe.ttest(t.test(data_newsConsum$newsPortalFrequency_2 ~ data_demograph$gender))
+#describe.ttest(t.test(data_newsConsum$newsPortalFrequency_3 ~ data_demograph$gender))
+#describe.ttest(t.test(data_newsConsum$newsPortalFrequency_4 ~ data_demograph$gender))
+#describe.ttest(t.test(data_newsConsum$newsPortalFrequency_5 ~ data_demograph$gender))
+#describe.ttest(t.test(data_newsConsum$newsPortalFrequency_6 ~ data_demograph$gender))
+
+A <- data_newsConsumTest %>% filter(!is.na(newsPortalFrequency_2))
+#tapply(A$newsPortalFrequency_2, A$gender, mean)
+#tapply(A$newsPortalFrequency_2, A$gender, sd)
+
+#apastats::describe.mean.sd(m= tapply(A$newsPortalFrequency_2, A$gender, mean)[1], 
+#                           sd= tapply(A$newsPortalFrequency_2, A$gender, sd)[1])
+
+#apastats::describe.mean.sd(m= tapply(A$newsPortalFrequency_2, A$gender, mean)[2], 
+#                           sd= tapply(A$newsPortalFrequency_2, A$gender, sd)[2])
+
+
+#portal2_gender <- table(data_newsConsum$newsPortalFrequency_2, data_demograph$gender) 
+#portal2_gender[,1]/male*100
+#portal2_gender[,2]/female*100
+```
 Von den Befragten nutzen:
 
-* `r table(data_newsConsum$newsPortal_1)/user*100` % die Internetportale des öffentlich-rechtlichen Rundfunks
-* `r table(data_newsConsum$newsPortal_2)/user*100` % die Internetportale überregionaler Zeitungen
-* `r table(data_newsConsum$newsPortal_3)/user*100` % die Internetportale regionaler Zeitungen
-* `r table(data_newsConsum$newsPortal_4)/user*100` % Online-Nachrichtenportale
-* `r table(data_newsConsum$newsPortal_5)/user*100` % Suchmaschinen
-* `r table(data_newsConsum$newsPortal_6)/user*100` % Soziale Netwerke
-* `r table(data_newsConsum$newsPortal_7)/user*100` % sonstige Quellen
+* `r table(data_newsConsum$newsPortal_1)/user*100` % aller Befragten die Internetportale des öffentlich-rechtlichen Rundfunks. Dabei nutzen sie diese im Durchschnitt fast täglich (`r apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_1)`).
+* `r table(data_newsConsum$newsPortal_2)/user*100` % die Internetportale überregionaler Zeitungen. Dabei nutzen sie diese im Durchschnitt mehrmals die Woche (`r apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_2)`).
+* `r table(data_newsConsum$newsPortal_3)/user*100` % die Internetportale regionaler Zeitungen. Dabei nutzen sie diese im Durchschnitt mehrmals die Woche (`r apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_3)`).
+* `r table(data_newsConsum$newsPortal_4)/user*100` % Online-Nachrichtenportale. Dabei nutzen sie diese im Durchschnitt mehrmals die Woche (`r apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_4)`).
+* `r table(data_newsConsum$newsPortal_5)/user*100` % Suchmaschinen. Dabei nutzen sie diese im Durchschnitt fast täglich (`r apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_5)`).
+* `r table(data_newsConsum$newsPortal_6)/user*100` % Soziale Netwerke. Dabei nutzen sie diese im Durchschnitt mindestens einmal täglich (`r apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_6)`).
+* `r table(data_newsConsum$newsPortal_7)/user*100` % sonstige Quellen. Dabei nutzen sie diese im Durchschnitt fast täglich (`r apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_7)`).
 
 um an neue Informationen zu gelangen.
 
-## Internetportale Nutzungszeit
-```{r}
-# 
-apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_1)
-apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_2)
-apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_3)
-apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_4)
-apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_5)
-apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_6)
+Zwischen den Geschlechtern besteht nur bei der Nutzung von regionalen ein signifikanter Unterschied (`r describe.ttest(t.test(data_newsConsum$newsPortalFrequency_2 ~ data_demograph$gender))`). Die männlichen Befragten nutzen die regionalen Tageszeitungen fast täglich (`r apastats::describe.mean.sd(m= tapply(A$newsPortalFrequency_2, A$gender, mean)[1], sd= tapply(A$newsPortalFrequency_2, A$gender, sd)[1])`) während die weiblichen Befragten dies nur einmal die Woche tun (`r apastats::describe.mean.sd(m= tapply(A$newsPortalFrequency_2, A$gender, mean)[2], sd= tapply(A$newsPortalFrequency_2, A$gender, sd)[2])`.
 
-# Genderunterschied
-portal1_gender <- table(data_newsConsum$newsPortalFrequency_1, data_demograph$gender) 
-portal1_gender[,1]/male*100
-portal1_gender[,2]/female*100
+## Themenauswahl
+
+```{r topic_graph}
+# Finde alle NA und ersetzte NA durch 9 
+data_topicSelect$interestingTopic[is.na(data_topicSelect$interestingTopic)] <-9
+data_topicSelect  %>% ggplot(aes(x = interestingTopic,
+                               y = ..prop..,
+                               fill = factor(data_demograph$gender))) + 
+                    geom_bar(position = "dodge") + 
+                    geom_text(aes(label = scales::percent(..prop..),      y= ..prop.. ),
+                              stat= "count", position = position_dodge(width = 1), hjust = -0.1) +
+                    labs(y = "Anteil in %", x="Thema") +
+                    scale_fill_manual(values = c("skyblue","royalblue"),
+                                      name="Geschlecht",
+                                      labels=c("männlich", "weiblich")) +
+                    guides(fill = guide_legend(reverse = TRUE)) +
+                    coord_flip(ylim=c(0,0.33))+
+                    scale_x_reverse(breaks = 1:9,labels = c("Politik","Games","Wirtschaft","Kultur","Lifestyle","Computer & Technik","Netzpolitik","Wissenschaft","keine Angabe")) +
+                    scale_y_continuous(labels = scales::percent)
+
+#data_topicSelect$interestingTopic[1]$label
+
+#describe.chi(table(data_topicSelect$interestingTopic, data_demograph$gender))
+
 ```
+
+Von den vorgegebenen Themenbereichen haben sich:
+
+* `r table(data_topicSelect$interestingTopic)[1]/user*100` % für A entschieden
+* `r table(data_topicSelect$interestingTopic)[2]/user*100` % für B entschieden
+* `r table(data_topicSelect$interestingTopic)[3]/user*100` % für C entschieden
+* `r table(data_topicSelect$interestingTopic)[4]/user*100` % für D entschieden
+* `r table(data_topicSelect$interestingTopic)[5]/user*100` % für E entschieden
+* `r table(data_topicSelect$interestingTopic)[6]/user*100` % für F entschieden
+* `r table(data_topicSelect$interestingTopic)[7]/user*100` % für G entschieden
+* `r table(data_topicSelect$interestingTopic)[8]/user*100` % für H entschieden
+* `r table(data_topicSelect$interestingTopic)[9]/user*100` % keine Angaben gemacht
+
+Wie aus der Grafik erkennbar ist, gibt es bei der Themenwahl einen signifikanten Unterschied zwischen den Geschlechtern (`r describe.chi(table(data_topicSelect$interestingTopic, data_demograph$gender))`).
+
+## Einschätzung Qualität der Empfehlungssysteme
+```{r}
+describe.mean.sd(data_RS_einschaetzung$einsch_random_1)
+describe.mean.sd(data_RS_einschaetzung$einsch_popular_1)
+describe.mean.sd(data_RS_einschaetzung$einsch_content_1)
+describe.mean.sd(data_RS_einschaetzung$einsch_UBCF_1)
+describe.mean.sd(data_RS_einschaetzung$einsch_IBCF_1)
+describe.mean.sd(data_RS_einschaetzung$einsch_hybrid_1)
+
+# Kein Unterschied zwischen den Geschlechtern erkennbar
+#t.test(data_RS_einschaetzung$einsch_random_1 ~ data_demograph$gender)
+#t.test(data_RS_einschaetzung$einsch_popular_1 ~ data_demograph$gender)
+#t.test(data_RS_einschaetzung$einsch_content_1 ~ data_demograph$gender)
+#t.test(data_RS_einschaetzung$einsch_UBCF_1 ~ data_demograph$gender)
+#t.test(data_RS_einschaetzung$einsch_IBCF_1 ~ data_demograph$gender)
+#t.test(data_RS_einschaetzung$einsch_hybrid_1 ~ data_demograph$gender)
+
+```
+
+
 
 ## Einstellung Privatsphäre von RS
 
-```{r}
+```{r RS_privacy}
 # Gesamter Mittelwert 
 describe.mean.sd(data_priv$RS_Privacy_Consern)
 
@@ -436,6 +516,29 @@ describe.ttest(t.test(data_priv$RS_Privacy_Consern ~ data_demograph$gender))
 # Mittelwert nach Altersgruppe
 psych::describeBy(data_priv$RS_Privacy_Consern, data_demograph$age_grp, mat = TRUE)
 describe.aov(aov(data_priv$RS_Privacy_Consern ~ data_demograph$age_grp))
-
 ```
 
+## Wissen über Österreich
+
+```{r knowledge_austria}
+#describe.mean.sd(data_know_austria$knowledge_austria)
+#data_know_austria %>% filter(knowledge_austria > 2) %>% count() %>% as.character()
+```
+Der Kenntnisstand der Befragten über das Tagesgeschehen in Österreich ist sehr gering (`r describe.mean.sd(data_know_austria$knowledge_austria)`).
+Gerade einmal `r data_know_austria %>% filter(knowledge_austria > 2) %>% count() %>% as.character()` von `r user` Befragten geben an, dass sie mindestens etwas Ahnung vom österreichischen Tagesgeschehen haben.
+
+# Einfluss Alter
+## KUT
+```{r KUT_age_effekt}
+# Mittelwert für einen Wert gruppiert anzeigen:
+tapply(data_kut$KUT, data_demograph$age_grp, mean)
+
+# Ausführliche Ausgabe mithilfe von psych:
+psych::describeBy(data_kut$KUT, data_demograph$age_grp)
+
+kut_age_aov <- aov(data_kut$KUT ~ data_demograph$age_grp)
+
+describe.aov(kut_age_aov)
+
+```
+Zwischen den Altersgruppen ist beim KUT kein signifikanter Unterschied beim KUT erkennbar (`r describe.aov(kut_age_aov)`).
