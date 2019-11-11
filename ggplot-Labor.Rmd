@@ -56,7 +56,7 @@ data_demograph  %>% ggplot(aes(x = school,
                     geom_bar(position = "dodge") + 
                     geom_text(aes(label = scales::percent(..prop..),      y= ..prop.. ),
                               stat= "count", position = position_dodge(width = 1), hjust = -0.1) +
-                    labs(y = "Anzahl", x="Abschluss") +
+                    labs(y = "Anteil in %", x="Abschluss") +
                     scale_fill_manual(values = c("skyblue","royalblue"),
                                       name="Geschlecht",
                                       labels=c("männlich", "weiblich")) +
@@ -72,10 +72,26 @@ data_demograph  %>% ggplot(aes(x = school,
 
 ```
 
-# KUT Labor
+# Topic Labor
 
 ```{r}
-tapply(data_kut$KUT, data_demograph$age_grp, mean)
+# Finde alle NA und ersetzte NA durch 9 
+data_topicSelect$interestingTopic[is.na(data_topicSelect$interestingTopic)] <-9
+data_topicSelect  %>% ggplot(aes(x = interestingTopic,
+                               y = ..prop..,
+                               fill = factor(data_demograph$gender))) + 
+                    geom_bar(position = "dodge") + 
+                    geom_text(aes(label = scales::percent(..prop..),      y= ..prop.. ),
+                              stat= "count", position = position_dodge(width = 1), hjust = -0.1) +
+                    labs(y = "Anteil in %", x="Thema") +
+                    scale_fill_manual(values = c("skyblue","royalblue"),
+                                      name="Geschlecht",
+                                      labels=c("männlich", "weiblich")) +
+                    guides(fill = guide_legend(reverse = TRUE)) +
+                    coord_flip(ylim=c(0,0.33))+
+                    scale_x_reverse(breaks = 1:9,labels = c("Politik","Games","Wirtschaft","Kultur","Lifestyle","Computer & Technik","Netzpolitik","Wissenschaft","keine Angabe")) +
+                    scale_y_continuous(labels = scales::percent)
 
- psych::describeBy(data_kut$KUT, data_demograph$age_grp, mat)
 ```
+```
+
