@@ -98,9 +98,68 @@ data_topicSelect  %>% ggplot(aes(x = interestingTopic,
 # Boxplot Labor
 
 ```{r}
-ggplot(data_RS_einschaetzung)+
-      geom_boxplot(aes(x=c(""), y=c(einsch_random_1)))
+ggplot(data_kut,aes(x=data_cleaned$gender, y=KUT, group=as.numeric(data_cleaned$gender)))+
+      geom_boxplot()+
+      labs(x ="Geschlecht", y = "") +
+      scale_x_continuous(breaks = 1:2, labels = c("männlich","weiblich")) +
+      coord_cartesian(ylim = c(1,6)) +
+      geom_jitter(shape=16, position=position_jitter(0.05))
 
-# https://www.datanovia.com/en/lessons/combine-multiple-ggplots-into-a-figure/
+# Mehrere Spalten in zwei Spalten (Bezeichnung, Wert) zusammenfassen:
+# pivot_longer(cols = NAME_ALLER_SPALTEN,names_to = "BEZEICHNUNG", values_to = "WERT")
+data_empf_gen <- data_RS_einschaetzung %>% select(-ResponseId) %>% pivot_longer(cols= starts_with("einsch"), names_to = "Empfehlungssystem", values_to = "Genauigkeit")
+
+# Boxplot mit Punktgraph
+ggplot(data_empf_gen, aes(x=Empfehlungssystem, y=Genauigkeit))+
+      geom_boxplot() +
+      #scale_x_discrete(labels = c("A","B","C","D","E","F")) +
+      geom_dotplot(binaxis='y', method= "histodot", stackdir='centerwhole', binwidth=1.2, stackratio = 1.4, fill = "royalblue", color = "darkblue") +
+      scale_y_continuous(labels = scales::unit_format(suffix =" %"))
+
+# Boxplot mit Violingraph
+ggplot(data_empf_gen, 
+       aes(x=reorder(Empfehlungssystem, Genauigkeit, FUN = mean), 
+           y=Genauigkeit))+
+      geom_violin(alpha = 0.6, 
+                  fill = "lightblue") +
+      geom_boxplot(alpha = 0.8) +
+      labs(x = "Empfehlungssystem") +
+      scale_x_discrete(labels = c("Random","Popular","IBCF","UBCF","Content","Hybrid")) +
+      scale_y_continuous(labels = scales::unit_format(suffix =" %"))
+```
+
+
+```{r}
+data_pub_gen <- data_publishing %>% select(-ResponseId)
+data_pub_gen$RS_dataPublishing_1 <- as.numeric(data_pub_gen$RS_dataPublishing_1)
+data_pub_gen$RS_dataPublishing_2 <- as.numeric(data_pub_gen$RS_dataPublishing_2)
+data_pub_gen$RS_dataPublishing_3 <- as.numeric(data_pub_gen$RS_dataPublishing_3)
+data_pub_gen$RS_dataPublishing_4 <- as.numeric(data_pub_gen$RS_dataPublishing_4)
+data_pub_gen$RS_dataPublishing_5 <- as.numeric(data_pub_gen$RS_dataPublishing_5)
+data_pub_gen$RS_dataPublishing_6 <- as.numeric(data_pub_gen$RS_dataPublishing_6)
+data_pub_gen$RS_dataPublishing_7 <- as.numeric(data_pub_gen$RS_dataPublishing_7)
+
+data_pub_gen <- data_pub_gen %>% pivot_longer(cols= c(starts_with("RS")), names_to = "Datentyp", values_to = "Bereitschaft")
+
+ggplot(data_pub_gen, 
+       aes(x=reorder(Datentyp, Bereitschaft, FUN = mean), 
+           y=Bereitschaft))+
+      geom_violin(alpha = 0.6, 
+                  fill = "lightblue") +
+      geom_boxplot(alpha = 0.7) +
+      labs(x = "Datentyp") +
+      scale_x_discrete(labels = c("Standort","Politische Einstellung","Religion","Geschlecht/Alter","Bewertung","Hobby","Themengebiete")) +
+      scale_y_continuous(breaks = seq(1, 6, by = 1)) +
+      coord_cartesian(ylim = c(1,6)) 
+```
+
+```{r}
+ggplot(data_priv,aes(x=data_cleaned$gender, y=RS_Privacy_Consern, group=as.numeric(data_cleaned$gender)))+
+      geom_violin(alpha = 0.6, fill = "lightblue") +
+      geom_boxplot(alpha = 0.7)+
+      labs(x ="Geschlecht", y = "Einstellung zur Privatsphäre eines Empfehlungssystems") +
+      scale_x_continuous(breaks = 1:2, labels = c("männlich","weiblich")) +
+      scale_y_continuous(breaks = seq(1, 6, by = 0.5)) +
+      coord_cartesian(ylim = c(1,6)) 
 ```
 
