@@ -383,12 +383,18 @@ KUT_female <- data_KUT_gender %>% filter(gender == 2) %>% select(KUT)
 ```
 
 ```{r KUT_boxplot}
-ggplot(data_kut,aes(x=data_cleaned$gender, y=KUT, group=as.numeric(data_cleaned$gender)))+
-      geom_boxplot()+
-      labs(x ="Geschlecht", y = "") +
-      scale_x_continuous(breaks = 1:2, labels = c("männlich","weiblich")) +
-      coord_cartesian(ylim = c(1,6)) +
-      geom_jitter(shape=16, position=position_jitter(0.05))
+ggplot(data_kut,aes(x=data_cleaned$gender, 
+                    y=KUT, 
+                    group=as.numeric(data_cleaned$gender)))+
+      geom_violin(alpha = 0.6, 
+                  fill = "lightblue") +
+      geom_boxplot(alpha = 0.8)+
+      labs(x ="Geschlecht", 
+           y = "") +
+      scale_x_continuous(breaks = 1:2, 
+                         labels = c("männlich","weiblich")) +
+      scale_y_continuous(breaks = seq(1, 6, by = 0.5)) +
+      coord_cartesian(ylim = c(1,6))
 ```
 
 
@@ -504,7 +510,27 @@ Wie aus der Grafik erkennbar ist, gibt es bei der Themenwahl einen signifikanten
 ## Freigabe Datentypen für RS
 
 ```{r data_publishing}
-# Boxplot?
+data_pub_gen <- data_publishing %>% select(-ResponseId)
+data_pub_gen$RS_dataPublishing_1 <- as.numeric(data_pub_gen$RS_dataPublishing_1)
+data_pub_gen$RS_dataPublishing_2 <- as.numeric(data_pub_gen$RS_dataPublishing_2)
+data_pub_gen$RS_dataPublishing_3 <- as.numeric(data_pub_gen$RS_dataPublishing_3)
+data_pub_gen$RS_dataPublishing_4 <- as.numeric(data_pub_gen$RS_dataPublishing_4)
+data_pub_gen$RS_dataPublishing_5 <- as.numeric(data_pub_gen$RS_dataPublishing_5)
+data_pub_gen$RS_dataPublishing_6 <- as.numeric(data_pub_gen$RS_dataPublishing_6)
+data_pub_gen$RS_dataPublishing_7 <- as.numeric(data_pub_gen$RS_dataPublishing_7)
+
+data_pub_gen <- data_pub_gen %>% pivot_longer(cols= c(starts_with("RS")), names_to = "Datentyp", values_to = "Bereitschaft")
+
+ggplot(data_pub_gen, 
+       aes(x=reorder(Datentyp, Bereitschaft, FUN = mean), 
+           y=Bereitschaft))+
+      geom_violin(alpha = 0.6, 
+                  fill = "lightblue") +
+      geom_boxplot(alpha = 0.7) +
+      labs(x = "Datentyp") +
+      scale_x_discrete(labels = c("Standort","Politische Einstellung","Religion","Geschlecht/Alter","Bewertung","Hobby","Themengebiete")) +
+      scale_y_continuous(breaks = seq(1, 6, by = 1)) +
+      coord_cartesian(ylim = c(1,6)) 
 ```
 Bereitschaft zur Datenfreigabe für das Verbessern von Empfehlungssystemen
 
@@ -519,23 +545,32 @@ Bereitschaft zur Datenfreigabe für das Verbessern von Empfehlungssystemen
 ## Einstellung Privatsphäre von RS
 
 ```{r RS_privacy}
-# Gesamter Mittelwert 
-# describe.mean.sd(data_priv$RS_Privacy_Consern)
-
-# Mittelwert nach Geschlecht
-#describe.ttest(t.test(data_priv$RS_Privacy_Consern ~ data_demograph$gender))
-
-#tapply(data_priv$RS_Privacy_Consern, data_demograph$gender, mean)[1]
-#tapply(data_priv$RS_Privacy_Consern, data_demograph$gender, sd)[1]
-
-#describe.mean.sd(m= tapply(data_priv$RS_Privacy_Consern, data_demograph$gender, mean)[1], sd= tapply(data_priv$RS_Privacy_Consern, data_demograph$gender, sd)[1])
+ggplot(data_priv,aes(x=data_cleaned$gender, y=RS_Privacy_Consern, group=as.numeric(data_cleaned$gender)))+
+      geom_violin(alpha = 0.6, fill = "lightblue") +
+      geom_boxplot(alpha = 0.7)+
+      labs(x ="Geschlecht", y = "Einstellung zur Privatsphäre eines Empfehlungssystems") +
+      scale_x_continuous(breaks = 1:2, labels = c("männlich","weiblich")) +
+      scale_y_continuous(breaks = seq(1, 6, by = 0.5)) +
+      coord_cartesian(ylim = c(1,6)) 
 ```
 
 Die Befragten machen sich leichte Sorgen um ihre Privatsphäre beim Verwenden von Empfehlungssystemen (`r describe.mean.sd(data_priv$RS_Privacy_Consern)
 `). Insgesamt machen sich die Frauen etwas mehr Sorgen um ihre Privatsphäre (`r describe.mean.sd(m= tapply(data_priv$RS_Privacy_Consern, data_demograph$gender, mean)[2], sd= tapply(data_priv$RS_Privacy_Consern, data_demograph$gender, sd)[2])`) als die männlichen Befragten (`r describe.mean.sd(m= tapply(data_priv$RS_Privacy_Consern, data_demograph$gender, mean)[1], sd= tapply(data_priv$RS_Privacy_Consern, data_demograph$gender, sd)[1])`). Dieser Unterschied ist aber nicht signifikant (`r describe.ttest(t.test(data_priv$RS_Privacy_Consern ~ data_demograph$gender))`).
 
 ## Einschätzung Qualität
-```{r}
+```{r quality_expection}
+data_empf_gen <- data_RS_einschaetzung %>% select(-ResponseId) %>% pivot_longer(cols= starts_with("einsch"), names_to = "Empfehlungssystem", values_to = "Genauigkeit")
+
+ggplot(data_empf_gen, 
+       aes(x=reorder(Empfehlungssystem, Genauigkeit, FUN = mean), 
+           y=Genauigkeit))+
+      geom_violin(alpha = 0.6, 
+                  fill = "lightblue") +
+      geom_boxplot(alpha = 0.8) +
+      labs(x = "Empfehlungssystem") +
+      scale_x_discrete(labels = c("Random","Popular","IBCF","UBCF","Content","Hybrid")) +
+      scale_y_continuous(labels = scales::unit_format(suffix =" %"))
+
 #describe.mean.sd(data_RS_einschaetzung$einsch_random_1)
 #describe.mean.sd(data_RS_einschaetzung$einsch_popular_1)
 #describe.mean.sd(data_RS_einschaetzung$einsch_content_1)
@@ -572,6 +607,42 @@ Bei diesen Einschätzungen gab es zwischen den Geschlechtern keine signifikaten 
 ```
 Der Kenntnisstand der Befragten über das Tagesgeschehen in Österreich ist sehr gering (`r describe.mean.sd(data_know_austria$knowledge_austria)`).
 Gerade einmal `r data_know_austria %>% filter(knowledge_austria > 2) %>% count() %>% as.character()` von `r user` Befragten geben an, dass sie mindestens etwas Ahnung vom österreichischen Tagesgeschehen haben.
+
+## Anlernen
+
+```{r Anlernen_describe}
+#describe.mean.sd(data_anlernen$Anlernen_SUM_bew)
+#describe.mean.sd(data_anlernen$anlernen_ges_bew)
+#describe.r(cor.test(data_anlernen$Anlernen_SUM_bew,data_anlernen$anlernen_ges_bew))
+data_anlernen %>% select(-ResponseId) %>%  psych::pairs.panels(hist.col="skyblue")
+
+```
+Die Befragten haben die präsentierten Empfehlungen während des Anlernes durchschnittlich bewertet (`r describe.mean.sd(data_anlernen$Anlernen_SUM_bew)`). Auch bei der anschließenden übergreifenden Bewertung des Anlernprozess, wurde dieser durchschnittlich bewertet (`r describe.mean.sd(data_anlernen$anlernen_ges_bew)`). Bei der Analyse, wie weit diese beiden Werte miteinander korrelieren, kam heraus, dass sie eine signifikant moderate poitive Beziehung miteinander haben (`r describe.r(cor.test(data_anlernen$Anlernen_SUM_bew,data_anlernen$anlernen_ges_bew))`).
+
+## UBCF
+```{r UBCF_describe}
+#describe.mean.sd(data_UBCF$UBCF_SUM_Artikel)
+#describe.mean.sd(data_UBCF$UBCF_ges_art_bew)
+#describe.mean.sd(data_UBCF$UBCF_RS_bew)
+
+data_UBCF %>% select(-ResponseId) %>%  psych::pairs.panels(hist.col="skyblue")
+data_UBCF %>% select(-ResponseId) %>%  psych::corr.test()
+```
+
+Die Befragten haben die empfohlenen Artikel des UBCF-Empfehlungssystem im Durchschnitt mittelmäßig bewertet (`r describe.mean.sd(data_UBCF$UBCF_SUM_Artikel)`). Auch die übergreifende Bewertung der Artikel (`r describe.mean.sd(data_UBCF$UBCF_ges_art_bew)`) zeigte ein ähnliches Bild. Die Bewertung des Empfehlungssystems an sich (`r describe.mean.sd(data_UBCF$UBCF_RS_bew)`) fiel hingegen leicht negativ aus.
+
+## SVD
+```{r SVD_describe}
+describe.mean.sd(data_SVD$SVD_SUM_Artikel)
+describe.mean.sd(data_SVD$SVD_ges_art_bew)
+describe.mean.sd(data_SVD$SVD_RS_bew)
+#describe.r(cor.test(data_UBCF$UBCF_SUM_Artikel,data_UBCF$UBCF_ges_art_bew,data_UBCF$UBCF_RS_bew))
+
+data_SVD %>% select(-ResponseId) %>%  psych::pairs.panels(hist.col="skyblue")
+data_SVD %>% select(-ResponseId) %>%  psych::corr.test()
+```
+
+Die Befragten haben die empfohlenen Artikel des SVD-Empfehlungssystem im Durchschnitt leicht negativ bewertet (`r describe.mean.sd(data_UBCF$UBCF_SUM_Artikel)`). Die übergreifende Bewertung der Artikel (`r describe.mean.sd(data_UBCF$UBCF_ges_art_bew)`) fiel etwas besser aus. Die Bewertung des Empfehlungssystems an sich (`r describe.mean.sd(data_UBCF$UBCF_RS_bew)`) fiel hingegen wieder leicht negativ aus.
 
 # Einfluss Alter
 ## KUT
