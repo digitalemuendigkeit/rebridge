@@ -82,7 +82,7 @@ data_topicSelect  %>% ggplot(aes(x = interestingTopic,
                                fill = factor(data_demograph$gender))) + 
                     geom_bar(position = "dodge") + 
                     geom_text(aes(label = scales::percent(..prop..),      y= ..prop.. ),
-                              stat= "count", position = position_dodge(width = 1), hjust = -0.1) +
+                    stat= "count", position = position_dodge(width = 1), hjust = -0.1) +
                     labs(y = "Anteil in %", x="Thema") +
                     scale_fill_manual(values = c("skyblue","royalblue"),
                                       name="Geschlecht",
@@ -93,5 +93,14 @@ data_topicSelect  %>% ggplot(aes(x = interestingTopic,
                     scale_y_continuous(labels = scales::percent)
 
 ```
+
+
+# Boxplot Labor
+
+```{r}
+ggplot(data_RS_einschaetzung)+
+      geom_boxplot(aes(x=c(""), y=c(einsch_random_1)))
+
+# https://www.datanovia.com/en/lessons/combine-multiple-ggplots-into-a-figure/
 ```
 
