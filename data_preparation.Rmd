@@ -1,0 +1,36 @@
+---
+title: "Data Preparation"
+author: "Stefan Ahlers"
+date: "13 11 2019"
+output:
+  html_document: 
+    toc: true
+    toc_float: true
+    code_folding : hide
+    df_print : paged
+  pdf_document: default
+---
+
+<!--- Läd die Daten und speichert sie in "raw" -->
+```{r read_data}
+raw <- read_sav(file= "data/191104-data.sav")
+```
+
+<!--- Bereinigt den Datensatz und speichert ihn in "data_cleaned" -
+
+TODO: O-Sterne Bewertungen in 1-Sterne Bewertungen umformatieren.
+
+-->
+```{r cleaning}
+data_cleaned <- raw %>% filter(Progress == 100) %>%    select(-StartDate,-EndDate,-Status,-IPAddress,-Duration__in_seconds_,-Progress,-Finished,-RecordedDate,-RecipientEmail,-RecipientFirstName,-RecipientLastName,-ExternalReference,-LocationLatitude,-LocationLongitude,-DistributionChannel,-UserLanguage,-ResponseID.0,-age.0,-gender.0,-topic,-randomTopicQuestion,-title,-body,-itemID,-subtitle,-date,-recsys,-rating,-iteration)  # Es werden nur die vollständigen Datensätze ausgewertet; überflüssige Spalten entfernt
+
+# Einzeltabellen gegliedert nach Themenbereich
+data_demograph <- data_cleaned %>% select(ResponseId,gender,age,school,school_5_TEXT,education,education_6_TEXT,) # extrahiert die demographischen Daten
+data_newsConsum <- data_cleaned %>% select(ResponseId,starts_with("news"))
+data_topicSelect <- data_cleaned %>% select(ResponseId,interestingTopic)
+data_publishing <- data_cleaned %>% select(ResponseId,starts_with("RS_dataPublishing"))
+data_RS_einschaetzung <- data_cleaned %>% select(ResponseId,starts_with("einsch"))
+data_know_austria <- data_cleaned %>% select(ResponseId,knowledge_austria)
+
+```
+

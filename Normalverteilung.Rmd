@@ -1,0 +1,58 @@
+---
+title: "Normalverteilung"
+author: "Stefan Ahlers"
+date: "13 11 2019"
+output:
+  html_document: 
+    toc: true
+    toc_float: true
+    code_folding : hide
+    df_print : paged
+  pdf_document: default
+---
+
+```{r norm}
+# Alter:
+shapiro.test(data_demograph$age) # nicht normalverteilt
+
+# KUT:
+shapiro.test(data_kut$KUT) # normalverteilt
+ 
+# RS Publishing:
+shapiro.test(data_publishing$RS_dataPublishing_1) # nicht normalverteilt
+shapiro.test(data_publishing$RS_dataPublishing_2) # nicht normalverteilt
+shapiro.test(data_publishing$RS_dataPublishing_3) # nicht normalverteilt
+shapiro.test(data_publishing$RS_dataPublishing_4) # nicht normalverteilt
+shapiro.test(data_publishing$RS_dataPublishing_5) # nicht normalverteilt
+shapiro.test(data_publishing$RS_dataPublishing_6) # nicht normalverteilt
+shapiro.test(data_publishing$RS_dataPublishing_7) # nicht normalverteilt
+
+# RS Privacy Trust
+shapiro.test(data_priv$RS_Privacy_Trust) # nicht normalverteilt
+
+# RS Einschätzung
+shapiro.test(data_RS_einschaetzung$einsch_random_1) # nicht normalverteilt
+shapiro.test(data_RS_einschaetzung$einsch_popular_1) # nicht normalverteilt
+shapiro.test(data_RS_einschaetzung$einsch_content_1) # nicht normalverteilt
+shapiro.test(data_RS_einschaetzung$einsch_UBCF_1) # nicht normalverteilt
+shapiro.test(data_RS_einschaetzung$einsch_IBCF_1) # ganz knappp normalverteilt
+shapiro.test(data_RS_einschaetzung$einsch_hybrid_1) # nicht normalverteilt
+
+# Knowledge Austria:
+shapiro.test(data_know_austria$knowledge_austria) # nicht normalverteilt
+
+# Anlernen:
+shapiro.test(data_anlernen$Anlernen_SUM_bew) # normalverteilt
+shapiro.test(data_anlernen$anlernen_ges_bew) # nicht normalverteilt
+
+# UBCF:
+shapiro.test(data_UBCF$UBCF_SUM_Artikel) # ultra knapp!!
+shapiro.test(data_UBCF$UBCF_ges_art_bew) # nicht normalverteilt
+shapiro.test(data_UBCF$UBCF_RS_bew) # nicht normalverteilt
+
+# SVD:
+shapiro.test(data_SVD$SVD_SUM_Artikel) # nicht normalverteilt
+shapiro.test(data_SVD$SVD_ges_art_bew) # nicht normalverteilt
+shapiro.test(data_SVD$SVD_RS_bew) #  normalverteilt
+```
+

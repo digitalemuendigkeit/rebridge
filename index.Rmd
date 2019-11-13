@@ -24,625 +24,20 @@ library(apastats)
 ```
 
 # Daten laden und bereinigen
-<!--- Läd die Daten und speichert sie in "raw" -->
-```{r read_data}
-raw <- read_sav(file= "data/191104-data.sav")
-```
-
-<!--- Bereinigt den Datensatz und speichert ihn in "data_cleaned" -
-
-TODO: O-Sterne Bewertungen in 1-Sterne Bewertungen umformatieren.
-
--->
-```{r cleaning}
-data_cleaned <- raw %>% filter(Progress == 100) %>%    select(-StartDate,-EndDate,-Status,-IPAddress,-Duration__in_seconds_,-Progress,-Finished,-RecordedDate,-RecipientEmail,-RecipientFirstName,-RecipientLastName,-ExternalReference,-LocationLatitude,-LocationLongitude,-DistributionChannel,-UserLanguage,-ResponseID.0,-age.0,-gender.0,-topic,-randomTopicQuestion,-title,-body,-itemID,-subtitle,-date,-recsys,-rating,-iteration)  # Es werden nur die vollständigen Datensätze ausgewertet; überflüssige Spalten entfernt
-
-# Einzeltabellen gegliedert nach Themenbereich
-data_demograph <- data_cleaned %>% select(ResponseId,gender,age,school,school_5_TEXT,education,education_6_TEXT,) # extrahiert die demographischen Daten
-data_newsConsum <- data_cleaned %>% select(ResponseId,starts_with("news"))
-data_topicSelect <- data_cleaned %>% select(ResponseId,interestingTopic)
-data_publishing <- data_cleaned %>% select(ResponseId,starts_with("RS_dataPublishing"))
-data_RS_einschaetzung <- data_cleaned %>% select(ResponseId,starts_with("einsch"))
-data_know_austria <- data_cleaned %>% select(ResponseId,knowledge_austria)
-
+```{r child = 'data_preparation.Rmd'}
 ```
 
 # Skalen Reliabilität
-Im folgenden werden die einzelnen Skalen auf ihre Reliabilität geprüft und ggfs. zusammengefasst.
-
-## Big Five
-<!--- Auswertung der Big Five 
-      1 = negativ
-      6 = positiv
--->
-```{r bigFive}
-big_df <- data_cleaned %>% select(starts_with("bigf"))
-
-#big_df %>% map(get_label) %>% str_split("-") -> labels_bf 
-#for (label in labels_bf){
-#  print(label[2])
-#}
-
-keys_bf  <- list(offenheit = c("-bigFive_5", "bigFive_10"),
-                 gewissenhaft  = c("-bigFive_3", "bigFive_8"),
-                 extraversion = c("-bigFive_1", "bigFive_6"),
-                 vertraeglich = c("bigFive_2", "-bigFive_7"),
-                 neuro = c("bigFive_4", "-bigFive_9"))
-
-result <- psych::scoreItems(keys = keys_bf , big_df)
-result
-#result$scores
-
-# Reliabilität zu schlecht, daher keine Auswertung!
-# data <- bind_cols(data_cleaned, as.data.frame(result$scores))
-```
-Die Reliabilität von den Offenheit ($\alpha =$ `r result$alpha[1]`) , Gewissenhaftigkeit ($\alpha =$ `r result$alpha[2]`), Verträglichkeit ($\alpha =$ `r result$alpha[4]`) und Neurozität ($\alpha =$ `r result$alpha[5]`) ist jeweils kleiner als $\alpha = .6$. Einzig die Aussagen zur Extraversion ($\alpha =$ `r result$alpha[3]`) weist eine auswertbare Realibität auf. Daher wird auf eine Auswertung der Big Five im Folgenden verzichtet.
-
-## KUT
-<!--- Auswertung des KUT 
-    1 = sehr geringer KUT
-    6 = sehr hoher KUT
--->
-```{r KUT}
-
-kut_df <- data_cleaned %>% select(starts_with("kut"))
-
-#kut_df %>% map(get_label) %>% str_split("-") -> labels_bf 
-
-#for (label in labels_bf){
-#  print(label[3])
-#}
-
-keys_bf  <- list(KUT = c("-kut_1", "-kut_2", "kut_3", "-kut_4", "-kut_5", "-kut_6", "kut_7", "kut_8", "kut_9", "kut_10"))
-
-#result_alpha <- psych::alpha(kut_df, check.keys = TRUE)
-#result_alpha
-
-result <- psych::scoreItems(keys = keys_bf , kut_df)
-result
-
-#result$scores
-
-data_kut <- data_cleaned %>% select(ResponseId)
-data_kut <-bind_cols(data_kut, as.data.frame(result$scores))
-```
-Der KUT weißt mit ($\alpha =$ `r result$alpha[1]`) eine gute Relibilität auf.
-
-## Privacy RecSys
-<!--- Auswertung des RS Privacy 
-      1 = sehr geringes Vertrauen in die Privatsphäre
-      6 = sehr großes Vertrauen in der Privatsphäre
--->
-```{r Privacy_RS}
-
-privacy_df <- data_cleaned %>% select(starts_with("RS_privacy"))
-
-#privacy_df %>% map(get_label) %>% str_split("-") -> labels_bf 
-#for (label in labels_bf){
-#print(label[3])
-#}
-
-keys_bf  <- list(RS_Privacy_Consern = c("-RS_privacy_1","-RS_privacy_2","RS_privacy_3","-RS_privacy_4","RS_privacy_5"))
-
-#result_alpha <- psych::alpha(privacy_df, check.keys = TRUE)
-#result_alpha
-
-result <- psych::scoreItems(keys = keys_bf , privacy_df)
-result
-#result$scores
-
-data_priv <- data_cleaned %>% select(ResponseId)
-data_priv <-bind_cols(data_priv, as.data.frame(result$scores))
+```{r child = 'data_reliability.Rmd'}
 ```
 
-Die Skala zur Einschätzugn der Privatsphäre eines RS weißt mit ($\alpha =$ `r result$alpha[1]`) eine gute Relibilität auf.
-
-## Anlernen
-<!--- Auswertung Bewertungen einzenler Artikel beim Anlernen
-      1 = sehr schlecht
-      6 = sehr gut
--->
-```{r Bewertung_SUM_Anlernen}
-anlernen_df <- data_cleaned %>% select(starts_with("Anlernen"),starts_with("firstReviewArticles"))
-
-# Neucodieren der einzelnen Artikelbewertungen
-anlernen_df$Anlernen1_1<-recode(anlernen_df$Anlernen1_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-anlernen_df$Anlernen2_1<-recode(anlernen_df$Anlernen2_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-anlernen_df$Anlernen3_1<-recode(anlernen_df$Anlernen3_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-anlernen_df$Anlernen4_1<-recode(anlernen_df$Anlernen4_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-anlernen_df$Anlernen5_1<-recode(anlernen_df$Anlernen5_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-anlernen_df$Anlernen6_1<-recode(anlernen_df$Anlernen6_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-anlernen_df$Anlernen7_1<-recode(anlernen_df$Anlernen7_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-
-keys_bf  <- list(Anlernen_SUM_bew = c("Anlernen1_1","Anlernen2_1","Anlernen3_1","Anlernen4_1","Anlernen5_1","Anlernen6_1","Anlernen7_1"),
-                 anlernen_ges_bew = c("firstReviewArticles_1","firstReviewArticles_2","firstReviewArticles_6"))
-
-#result_alpha <- psych::alpha(anlernen_df, check.keys = TRUE)
-#result_alpha
-
-result <- psych::scoreItems(keys = keys_bf , anlernen_df)
-result
-#result$scores
-
-data_anlernen <- data_cleaned %>% select(ResponseId)
-data_anlernen <-bind_cols(data_anlernen, as.data.frame(result$scores))
-
-
+# Test auf Normalverteilung
+```{r child = 'Normalverteilung.Rmd'}
 ```
-Aus den Bewertungen der einzelnen Artikeln, die während des Anlernen der Empfehlungssysteme getätigt werden, lässt sich eine durchschnittliche Bewertung berechnen. Diese durchschnittlich Bewertung weißt mit ($\alpha =$ `r result$alpha[1]`) eine schwache Relibilität der einzelnen Bewertungen auf. 
-
-Aus drei der sieben Aussagen zur Bewertung des Anlernsystems wurde ein Durchschnittswert berechnet, wie gut den Probanden die Artikel gefallen haben. Dieser Durchschnitsswert hat eine gute Reliabilität von ($\alpha =$ `r result$alpha[2]`). Die anderen Aussagen decken andere Dimensionen ab und werden deswegen einzeln weiter betrachtet.
-
-## UBCF
-<!--- Auswertung des UBCF Empfehlungssystem
-      1 = sehr schlecht
-      6 = sehr gut
--->
-```{r UBCF}
-UBCF_df <- data_cleaned %>% select(starts_with("loop1"),starts_with("UBCF"))
-
-# Neucodieren der einzelnen Artikelbewertungen
-UBCF_df$loop1.1_1<-recode(UBCF_df$loop1.1_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-UBCF_df$loop1.2_1<-recode(UBCF_df$loop1.2_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-UBCF_df$loop1.3_1<-recode(UBCF_df$loop1.3_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-UBCF_df$loop1.4_1<-recode(UBCF_df$loop1.4_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-
-keys_bf  <- list(UBCF_SUM_Artikel = c("loop1.1_1","loop1.2_1","loop1.3_1","loop1.4_1"),
-                 UBCF_ges_art_bew = c("UBCF_ArticleReview_1","UBCF_ArticleReview_2","UBCF_ArticleReview_6"),
-                 UBCF_RS_bew = c("-UBCF_Review_1","UBCF_Review_2","-UBCF_Review_3","UBCF_Review_4","-UBCF_Review_5"))
-
-result <- psych::scoreItems(keys = keys_bf , UBCF_df)
-result
-#result$scores
-
-data_UBCF <- data_cleaned %>% select(ResponseId)
-data_UBCF <-bind_cols(data_UBCF, as.data.frame(result$scores))
-
-```
-Aus den Bewertungen der einzelnen Artikeln, die das UBCF-Empfehlungssystem den Probanden empfohlen hat, lässt sich eine durchschnittliche Bewertung berechnen. Diese durchschnittlich Bewertung weißt mit ($\alpha =$ `r result$alpha[1]`) eine schwache Relibilität der einzelnen Bewertungen auf. 
-
-Aus drei der sechs Aussagen zur Gesamtbewertung der Artikel des UBCF-Empfehlungssystems, wurde ein Durchschnittswert berechnet, wie gut den Probanden die Artikel gefallen haben. Dieser Durchschnitsswert hat eine sehr gute Reliabilität von ($\alpha =$ `r result$alpha[2]`). 
-
-Die anderen Aussagen decken andere Dimensionen ab und werden deswegen einzeln weiter betrachtet.
-Die Zusammenfassung der Scala, wie gut die Probanden das UBCF-Empfehlungssystem finden, weißt mit ($\alpha =$ `r result$alpha[3]`) eine gute Reliabilität auf.
-
-## SVD
-<!--- Auswertung des SVD Empfehlungssystem
-      1 = sehr schlecht
-      6 = sehr gut
--->
-```{r SVD}
-SVD_df <- data_cleaned %>% select(starts_with("loop2"),starts_with("SVD"))
-
-# Neucodieren der einzelnen Artikelbewertungen
-SVD_df$loop2.1_1<-recode(SVD_df$loop2.1_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-SVD_df$loop2.2_1<-recode(SVD_df$loop2.2_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-SVD_df$loop2.3_1<-recode(SVD_df$loop2.3_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-SVD_df$loop2.4_1<-recode(SVD_df$loop2.4_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-
-keys_bf  <- list(SVD_SUM_Artikel = c("loop2.1_1","loop2.2_1","loop2.3_1","loop2.4_1"),
-                 SVD_ges_art_bew = c("SVD_articleReview_1","SVD_articleReview_2","SVD_articleReview_6"),
-                 SVD_RS_bew = c("-SVD_bewertung_1","SVD_bewertung_2","-SVD_bewertung_3","SVD_bewertung_4","-SVD_bewertung_5"))
-
-result <- psych::scoreItems(keys = keys_bf , SVD_df)
-result
-#result$scores
-
-data_SVD <- data_cleaned %>% select(ResponseId)
-data_SVD <-bind_cols(data_SVD, as.data.frame(result$scores))
-```
-Aus den Bewertungen der einzelnen Artikeln, die das SVD-Empfehlungssystem den Probanden empfohlen hat, lässt sich eine durchschnittliche Bewertung berechnen. Diese durchschnittlich Bewertung weißt mit ($\alpha =$ `r result$alpha[1]`) eine schwache Relibilität der einzelnen Bewertungen auf. 
-
-Aus drei der sieben Aussagen zur Gesamtbewertung der Artikel des SVD-Empfehlungssystems, wurde ein Durchschnittswert berechnet, wie gut den Probanden die Artikel gefallen haben. Dieser Durchschnitsswert hat eine sehr gute Reliabilität von ($\alpha =$ `r result$alpha[2]`). Die anderen Aussagen decken andere Dimensionen ab und werden deswegen einzeln weiter betrachtet.
-
-Die Zusammenfassung der Scala, wie gut die Probanden das UBCF-Empfehlungssystem finden, weißt mit ($\alpha =$ `r result$alpha[3]`) eine gute Reliabilität auf.
 
 # Stichprobenbeschreibung
-
-An der Umfrage haben insgesamt `r length(raw$ResponseId)` Personen teilgenommen. Davon haben `r length(data_cleaned$ResponseId)` Personen die Umfrage vollständig abgeschlossen und werden in der folgenden Auswertung berücksichtigt. Dies entspricht einer Abbrecherquote von `r (1 - length(data_demograph$ResponseId)/length(raw$ResponseId))*100` %.
-
-## Geschlecht
-```{r  gender_graph}
-data_demograph  %>% ggplot() + 
-                    aes(x = gender, y = ..prop..) + 
-                    geom_bar(width=.5) + 
-                    geom_text(aes(label = scales::percent(..prop..), y= ..prop.. ),
-                              stat= "count", hjust = -0.1) +
-                    labs(y = "Anteil in %", x="Geschlecht") +
-                    scale_x_reverse(breaks = 1:2,labels = c("männlich",
-                                                            "weiblich")) +
-                    scale_y_continuous(labels = scales::percent) +
-                    coord_flip(ylim=c(0,0.65)) 
+```{r child = 'Stichprobenbeschreibung.Rmd'}
 ```
-
-```{r gender_describe}
-# Definiere Geschlechter und Nutzeranzahl
-male   <- table(data_demograph$gender)[1]
-female <- table(data_demograph$gender)[2]
-divers <- table(data_demograph$gender)[0]
-user   <- length(data_demograph$ResponseId)
-```
-
-Die Teilnehmer der Umfrage waren zu:
-
-* `r female/user*100` % weiblich
-* `r male/user*100` % männlich
-* `r divers/user*100`0 % divers
-
-## Alter
-```{r age_group}
-# Alter der Probanden gruppiert #
-#   <= 21 Jahre → Gruppe 1      #
-# 22 - 35 Jahre → Gruppe 2      #
-# 36 - 50 Jahre → Gruppe 3      #
-# 50 - 64 Jahre → Gruppe 5      # 
-#    > 65 Jahre → Gruppe 6      #
-
-data_demograph <- data_demograph %>% mutate(age_grp = case_when(age < 22 ~ 1, 
-                                                                age  < 35 ~ 2,
-                                                                age  < 50 ~ 3,
-                                                                age  < 65 ~ 4,
-                                                                age >= 65 ~ 5))
-```
-
-```{r age_graph}
-
-# Grafische Darstellung
-data_demograph  %>% ggplot() + 
-                    aes(x = as.numeric(age), 
-                        fill = factor(gender)) + 
-                    geom_histogram(position = "stack", binwidth = 1) + 
-                    xlab("Alter") + 
-                    ylab("Anzahl") + 
-                    scale_fill_discrete(name="Geschlecht",
-                                        labels=c("männlich", "weiblich"))
-
-#t.test(data_demograph$age ~ data_demograph$gender)
-```
-Die Befragten waren zwischen `r min(data_demograph$age)` und  `r max(data_demograph$age)` Jahre alt. Das Durchschnittsalter der Befragten beträgt `r mean(data_demograph$age)` Jahre (`r describe.mean.sd(data_demograph$age)`). 
-
-Es besteht dabei kein signifikanter Altersunterschied zwischen den Geschlechtern. Die männlichen Befragten sind `r tapply(data_demograph$age, data_demograph$gender, mean)[1]` Jahre (SD = `r tapply(data_demograph$age, data_demograph$gender, sd)[1]`) und die weiblichen Befragten `r tapply(data_demograph$age, data_demograph$gender, mean)[2]` Jahre alt (SD = `r tapply(data_demograph$age, data_demograph$gender, sd)[2]`).
-
-## Schulbildung
-```{r school_graph}
-data_demograph  %>% ggplot(aes(x = school, 
-                               y = ..prop..,
-                               fill = factor(gender))) + 
-                    geom_bar(position = "dodge") + 
-                    geom_text(aes(label = scales::percent(..prop..),      y= ..prop.. ),
-                              stat= "count", position = position_dodge(width = 1), hjust = -0.1) +
-                    labs(y = "Anteil in %", x="Abschluss") +
-                    scale_fill_manual(values = c("skyblue","royalblue"),
-                                      name="Geschlecht",
-                                      labels=c("männlich", "weiblich")) +
-                    guides(fill = guide_legend(reverse = TRUE)) +
-                    coord_flip(ylim=c(0,0.8))+
-                    scale_x_reverse(breaks = 1:5,labels = c("keine Schulausbildung",
-                                                            "Volks-/Hauptschulabschluss",
-                                                            "Realschulabschluss",
-                                                            "(Fach-)Abitur",
-                                                            "Sonstiges")) +
-                    scale_y_continuous(labels = scales::percent)
-```
-
-Von den Befragten haben:
-
-* `r table(data_demograph$school)[1]/user*100` % (noch) keine Schulabschluss
-* `r table(data_demograph$school)[2]/user*100` % einen Hauptschulabschluss
-* `r table(data_demograph$school)[3]/user*100` % einen Realschulabschluss 
-* `r table(data_demograph$school)[4]/user*100` % das (Fach-)Abitur
-
-Die Befragten haben alle ein sehr hohes Bildungsniveau. Insgesamt besitzen `r table(data_demograph$school)[4]/user*100` % das (Fach-)Abitur. Auch zwischen den Geschlechtern ist kein Unterschied erkennbar, so haben `r table(data_demograph$school, data_demograph$gender)[4,1]/male*100` % der männlichen und `r table(data_demograph$school, data_demograph$gender)[4,2]/female*100` % der weiblichen Befragten das Abitur.
-
-
-## Berufsausbildung
-```{r education_graph}
-data_demograph  %>% ggplot(aes(x = education, 
-                               y = ..prop..,
-                               fill = factor(gender))) + 
-                    geom_bar(position = "dodge") + 
-                    geom_text(aes(label = scales::percent(..prop..), y= ..prop.. ),
-                              stat= "count", position = position_dodge(width = 1), hjust = -0.1) +
-                    labs(y = "Anteil in %", x="Abschluss") +
-                    scale_fill_manual(values = c("skyblue","royalblue"),
-                                      name="Geschlecht",
-                                      labels=c("männlich", "weiblich")) +
-                    guides(fill = guide_legend(reverse = TRUE)) +
-                    coord_flip(ylim=c(0,0.5))+
-                    scale_x_reverse(breaks = 1:6,labels = c("keine Ausbildung / Studium abgeschlossen",
-                                                            "Ausbildung",
-                                                            "Meister",
-                                                            "Hochschulabschluss",
-                                                            "Promotion",
-                                                            "Sonstiges")) +
-                    scale_y_continuous(labels = scales::percent)
-
-```
-
-Von den Befragten haben:
-
-+ `r table(data_demograph$education)[1]/user*100` % noch keine Ausbildung/ kein Studium abgeschlossen
-+ `r table(data_demograph$education)[2]/user*100` % eine Ausbildung abgeschlossen
-+ `r table(data_demograph$education)[3]/user*100` % einen Meister gemacht
-+ `r table(data_demograph$education)[4]/user*100` % einen Hochschulabschluss erworben
-+ `r table(data_demograph$education)[5]/user*100` % promoviert
-
-
-## KUT
-```{r KUT_describe}
-data_KUT_gender <- inner_join(data_demograph, data_kut, by="ResponseId") %>% select(gender,KUT)
-
-#cor(data_KUT_gender$gender, data_KUT_gender$KUT)
-
-KUT_male <- data_KUT_gender %>% filter(gender == 1) %>% select(KUT)
-KUT_female <- data_KUT_gender %>% filter(gender == 2) %>% select(KUT)
-#describe.mean.sd(KUT_male$KUT)
-#describe.mean.sd(KUT_female$KUT)
-#describe.mean.sd(data_kut$KUT)
-#describe.ttest(t.test(data_kut$KUT ~ data_demograph$gender))
-```
-
-```{r KUT_boxplot}
-ggplot(data_kut,aes(x=data_cleaned$gender, 
-                    y=KUT, 
-                    group=as.numeric(data_cleaned$gender)))+
-      geom_violin(alpha = 0.6, 
-                  fill = "lightblue") +
-      geom_boxplot(alpha = 0.8)+
-      labs(x ="Geschlecht", 
-           y = "") +
-      scale_x_continuous(breaks = 1:2, 
-                         labels = c("männlich","weiblich")) +
-      scale_y_continuous(breaks = seq(1, 6, by = 0.5)) +
-      coord_cartesian(ylim = c(1,6))
-```
-
-
-Der KUT der Befragten ist mittelmäßig stark ausgeprägt: `r describe.mean.sd(data_kut$KUT)`. Bei der Betrachtung der Geschlechter ist erkennbar, dass die männlichen Befragten einen stark signifikat höherne KUT (`r describe.mean.sd(KUT_male$KUT)`) als die Frauen (`r describe.mean.sd(KUT_female$KUT)`) haben (`r describe.ttest(t.test(data_kut$KUT ~ data_demograph$gender))`).
- 
-## Internetportale
-
-```{r internetportal_trash}
-# Portal 1
-#portal1_gender <- table(data_newsConsum$newsPortal_1, data_demograph$gender)
-#sum(portal1_gender)/user
-#portal1_gender[,1]/male
-#portal1_gender[,2]/female
-```
-
-<!--- 1 =	mehrmals täglich			
-      2	= 1-mal pro Tag			
-      3	= 4- bis 6-mal pro Woche			
-      4 =	2- bis 3-mal pro Woche			
-      5	= 1-mal pro Woche			
-      6	= 2- bis 3-mal pro Monat			
-      7	= 1-mal pro Monat			
-      8	= seltener als 1-mal pro Monat --> 
-
-```{r internetport_description}
-data_newsConsumTest <- inner_join(data_newsConsum, data_demograph, by="ResponseId") %>% select(ResponseId,gender, age_grp,starts_with("news"))
-
-# Anteil Nutzung
-#apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_1)
-#apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_2)
-#apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_3)
-#apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_4)
-#apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_5)
-#apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_6)
-
-# Genderunterschied
-#describe.ttest(t.test(data_newsConsum$newsPortalFrequency_1 ~ data_demograph$gender))
-#sig# describe.ttest(t.test(data_newsConsum$newsPortalFrequency_2 ~ data_demograph$gender))
-#describe.ttest(t.test(data_newsConsum$newsPortalFrequency_3 ~ data_demograph$gender))
-#describe.ttest(t.test(data_newsConsum$newsPortalFrequency_4 ~ data_demograph$gender))
-#describe.ttest(t.test(data_newsConsum$newsPortalFrequency_5 ~ data_demograph$gender))
-#describe.ttest(t.test(data_newsConsum$newsPortalFrequency_6 ~ data_demograph$gender))
-
-A <- data_newsConsumTest %>% filter(!is.na(newsPortalFrequency_2))
-#tapply(A$newsPortalFrequency_2, A$gender, mean)
-#tapply(A$newsPortalFrequency_2, A$gender, sd)
-
-#apastats::describe.mean.sd(m= tapply(A$newsPortalFrequency_2, A$gender, mean)[1], 
-#                           sd= tapply(A$newsPortalFrequency_2, A$gender, sd)[1])
-
-#apastats::describe.mean.sd(m= tapply(A$newsPortalFrequency_2, A$gender, mean)[2], 
-#                           sd= tapply(A$newsPortalFrequency_2, A$gender, sd)[2])
-
-
-#portal2_gender <- table(data_newsConsum$newsPortalFrequency_2, data_demograph$gender) 
-#portal2_gender[,1]/male*100
-#portal2_gender[,2]/female*100
-```
-Von den Befragten nutzen:
-
-* `r table(data_newsConsum$newsPortal_1)/user*100` % aller Befragten die Internetportale des öffentlich-rechtlichen Rundfunks. Dabei nutzen sie diese im Durchschnitt fast täglich (`r apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_1)`).
-* `r table(data_newsConsum$newsPortal_2)/user*100` % die Internetportale überregionaler Zeitungen. Dabei nutzen sie diese im Durchschnitt mehrmals die Woche (`r apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_2)`).
-* `r table(data_newsConsum$newsPortal_3)/user*100` % die Internetportale regionaler Zeitungen. Dabei nutzen sie diese im Durchschnitt mehrmals die Woche (`r apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_3)`).
-* `r table(data_newsConsum$newsPortal_4)/user*100` % Online-Nachrichtenportale. Dabei nutzen sie diese im Durchschnitt mehrmals die Woche (`r apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_4)`).
-* `r table(data_newsConsum$newsPortal_5)/user*100` % Suchmaschinen. Dabei nutzen sie diese im Durchschnitt fast täglich (`r apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_5)`).
-* `r table(data_newsConsum$newsPortal_6)/user*100` % Soziale Netwerke. Dabei nutzen sie diese im Durchschnitt mindestens einmal täglich (`r apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_6)`).
-* `r table(data_newsConsum$newsPortal_7)/user*100` % sonstige Quellen. Dabei nutzen sie diese im Durchschnitt fast täglich (`r apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_7)`).
-
-um an neue Informationen zu gelangen.
-
-Zwischen den Geschlechtern besteht nur bei der Nutzung von regionalen ein signifikanter Unterschied (`r describe.ttest(t.test(data_newsConsum$newsPortalFrequency_2 ~ data_demograph$gender))`). Die männlichen Befragten nutzen die regionalen Tageszeitungen fast täglich (`r apastats::describe.mean.sd(m= tapply(A$newsPortalFrequency_2, A$gender, mean)[1], sd= tapply(A$newsPortalFrequency_2, A$gender, sd)[1])`) während die weiblichen Befragten dies nur einmal die Woche tun (`r apastats::describe.mean.sd(m= tapply(A$newsPortalFrequency_2, A$gender, mean)[2], sd= tapply(A$newsPortalFrequency_2, A$gender, sd)[2])`.
-
-## Themenauswahl
-
-```{r topic_graph}
-# Finde alle NA und ersetzte NA durch 9 
-data_topicSelect$interestingTopic[is.na(data_topicSelect$interestingTopic)] <-9
-data_topicSelect  %>% ggplot(aes(x = interestingTopic,
-                               y = ..prop..,
-                               fill = factor(data_demograph$gender))) + 
-                    geom_bar(position = "dodge") + 
-                    geom_text(aes(label = scales::percent(..prop..),      y= ..prop.. ),
-                              stat= "count", position = position_dodge(width = 1), hjust = -0.1) +
-                    labs(y = "Anteil in %", x="Thema") +
-                    scale_fill_manual(values = c("skyblue","royalblue"),
-                                      name="Geschlecht",
-                                      labels=c("männlich", "weiblich")) +
-                    guides(fill = guide_legend(reverse = TRUE)) +
-                    coord_flip(ylim=c(0,0.33))+
-                    scale_x_reverse(breaks = 1:9,labels = c("Politik","Games","Wirtschaft","Kultur","Lifestyle","Computer & Technik","Netzpolitik","Wissenschaft","keine Angabe")) +
-                    scale_y_continuous(labels = scales::percent)
-
-#data_topicSelect$interestingTopic[1]$label
-
-#describe.chi(table(data_topicSelect$interestingTopic, data_demograph$gender))
-
-```
-
-Von den vorgegebenen Themenbereichen haben sich:
-
-* `r table(data_topicSelect$interestingTopic)[1]/user*100` % für A entschieden
-* `r table(data_topicSelect$interestingTopic)[2]/user*100` % für B entschieden
-* `r table(data_topicSelect$interestingTopic)[3]/user*100` % für C entschieden
-* `r table(data_topicSelect$interestingTopic)[4]/user*100` % für D entschieden
-* `r table(data_topicSelect$interestingTopic)[5]/user*100` % für E entschieden
-* `r table(data_topicSelect$interestingTopic)[6]/user*100` % für F entschieden
-* `r table(data_topicSelect$interestingTopic)[7]/user*100` % für G entschieden
-* `r table(data_topicSelect$interestingTopic)[8]/user*100` % für H entschieden
-* `r table(data_topicSelect$interestingTopic)[9]/user*100` % keine Angaben gemacht
-
-Wie aus der Grafik erkennbar ist, gibt es bei der Themenwahl einen signifikanten Unterschied zwischen den Geschlechtern (`r describe.chi(table(data_topicSelect$interestingTopic, data_demograph$gender))`).
-
-## Freigabe Datentypen für RS
-
-```{r data_publishing}
-data_pub_gen <- data_publishing %>% select(-ResponseId)
-data_pub_gen$RS_dataPublishing_1 <- as.numeric(data_pub_gen$RS_dataPublishing_1)
-data_pub_gen$RS_dataPublishing_2 <- as.numeric(data_pub_gen$RS_dataPublishing_2)
-data_pub_gen$RS_dataPublishing_3 <- as.numeric(data_pub_gen$RS_dataPublishing_3)
-data_pub_gen$RS_dataPublishing_4 <- as.numeric(data_pub_gen$RS_dataPublishing_4)
-data_pub_gen$RS_dataPublishing_5 <- as.numeric(data_pub_gen$RS_dataPublishing_5)
-data_pub_gen$RS_dataPublishing_6 <- as.numeric(data_pub_gen$RS_dataPublishing_6)
-data_pub_gen$RS_dataPublishing_7 <- as.numeric(data_pub_gen$RS_dataPublishing_7)
-
-data_pub_gen <- data_pub_gen %>% pivot_longer(cols= c(starts_with("RS")), names_to = "Datentyp", values_to = "Bereitschaft")
-
-ggplot(data_pub_gen, 
-       aes(x=reorder(Datentyp, Bereitschaft, FUN = mean), 
-           y=Bereitschaft))+
-      geom_violin(alpha = 0.6, 
-                  fill = "lightblue") +
-      geom_boxplot(alpha = 0.7) +
-      labs(x = "Datentyp") +
-      scale_x_discrete(labels = c("Standort","Politische Einstellung","Religion","Geschlecht/Alter","Bewertung","Hobby","Themengebiete")) +
-      scale_y_continuous(breaks = seq(1, 6, by = 1)) +
-      coord_cartesian(ylim = c(1,6)) 
-```
-Bereitschaft zur Datenfreigabe für das Verbessern von Empfehlungssystemen
-
-* Bevorzugten Themengebiete: uneindeutig (`r describe.mean.sd(data_publishing$RS_dataPublishing_1)`)
-* Bewertungen über gerade gelesene Artikel: schwach abgeneigt (`r describe.mean.sd(data_publishing$RS_dataPublishing_2)`)
-* Persönliche Interessen (Hobbys): sehr schwach abgeneigt (`r describe.mean.sd(data_publishing$RS_dataPublishing_3)`)
-* Persönliche Angaben (Geschlecht, Alter): schwach abgeneigt (`r describe.mean.sd(data_publishing$RS_dataPublishing_4)`)
-* Aktueller Standort: abgeneigt (`r describe.mean.sd(data_publishing$RS_dataPublishing_5)`)
-* Politische Einstellung: abgeneigt (`r describe.mean.sd(data_publishing$RS_dataPublishing_6)`)
-* Religionszugehörigkeit: abgeneigt (`r describe.mean.sd(data_publishing$RS_dataPublishing_7)`)
-
-## Einstellung Privatsphäre von RS
-
-```{r RS_privacy}
-ggplot(data_priv,aes(x=data_cleaned$gender, y=RS_Privacy_Consern, group=as.numeric(data_cleaned$gender)))+
-      geom_violin(alpha = 0.6, fill = "lightblue") +
-      geom_boxplot(alpha = 0.7)+
-      labs(x ="Geschlecht", y = "Einstellung zur Privatsphäre eines Empfehlungssystems") +
-      scale_x_continuous(breaks = 1:2, labels = c("männlich","weiblich")) +
-      scale_y_continuous(breaks = seq(1, 6, by = 0.5)) +
-      coord_cartesian(ylim = c(1,6)) 
-```
-
-Die Befragten machen sich leichte Sorgen um ihre Privatsphäre beim Verwenden von Empfehlungssystemen (`r describe.mean.sd(data_priv$RS_Privacy_Consern)
-`). Insgesamt machen sich die Frauen etwas mehr Sorgen um ihre Privatsphäre (`r describe.mean.sd(m= tapply(data_priv$RS_Privacy_Consern, data_demograph$gender, mean)[2], sd= tapply(data_priv$RS_Privacy_Consern, data_demograph$gender, sd)[2])`) als die männlichen Befragten (`r describe.mean.sd(m= tapply(data_priv$RS_Privacy_Consern, data_demograph$gender, mean)[1], sd= tapply(data_priv$RS_Privacy_Consern, data_demograph$gender, sd)[1])`). Dieser Unterschied ist aber nicht signifikant (`r describe.ttest(t.test(data_priv$RS_Privacy_Consern ~ data_demograph$gender))`).
-
-## Einschätzung Qualität
-```{r quality_expection}
-data_empf_gen <- data_RS_einschaetzung %>% select(-ResponseId) %>% pivot_longer(cols= starts_with("einsch"), names_to = "Empfehlungssystem", values_to = "Genauigkeit")
-
-ggplot(data_empf_gen, 
-       aes(x=reorder(Empfehlungssystem, Genauigkeit, FUN = mean), 
-           y=Genauigkeit))+
-      geom_violin(alpha = 0.6, 
-                  fill = "lightblue") +
-      geom_boxplot(alpha = 0.8) +
-      labs(x = "Empfehlungssystem") +
-      scale_x_discrete(labels = c("Random","Popular","IBCF","UBCF","Content","Hybrid")) +
-      scale_y_continuous(labels = scales::unit_format(suffix =" %"))
-
-#describe.mean.sd(data_RS_einschaetzung$einsch_random_1)
-#describe.mean.sd(data_RS_einschaetzung$einsch_popular_1)
-#describe.mean.sd(data_RS_einschaetzung$einsch_content_1)
-#describe.mean.sd(data_RS_einschaetzung$einsch_UBCF_1)
-#describe.mean.sd(data_RS_einschaetzung$einsch_IBCF_1)
-#describe.mean.sd(data_RS_einschaetzung$einsch_hybrid_1)
-
-# Kein Unterschied zwischen den Geschlechtern erkennbar
-#t.test(data_RS_einschaetzung$einsch_random_1 ~ data_demograph$gender)
-#t.test(data_RS_einschaetzung$einsch_popular_1 ~ data_demograph$gender)
-#t.test(data_RS_einschaetzung$einsch_content_1 ~ data_demograph$gender)
-#t.test(data_RS_einschaetzung$einsch_UBCF_1 ~ data_demograph$gender)
-#t.test(data_RS_einschaetzung$einsch_IBCF_1 ~ data_demograph$gender)
-#t.test(data_RS_einschaetzung$einsch_hybrid_1 ~ data_demograph$gender)
-
-```
-
-Die Befragten schätzen die Genauigkeit der Empfehlungssysteme folgendermaßen ein (Angaben in %):
-
-* Zufällige Empfehlungen: `r describe.mean.sd(data_RS_einschaetzung$einsch_random_1)`
-* Populäre Empfehlungen: `r describe.mean.sd(data_RS_einschaetzung$einsch_popular_1)`
-* Inhaltsbasierte Empfehlungen: `r describe.mean.sd(data_RS_einschaetzung$einsch_content_1)`
-* UBCF: `r describe.mean.sd(data_RS_einschaetzung$einsch_UBCF_1)`
-* IBCF: `r describe.mean.sd(data_RS_einschaetzung$einsch_IBCF_1)`
-* Hybride Empfehlungen: `r describe.mean.sd(data_RS_einschaetzung$einsch_hybrid_1)`
-
-Bei diesen Einschätzungen gab es zwischen den Geschlechtern keine signifikaten Unterschiede.
-
-## Wissen über Österreich
-
-```{r knowledge_austria}
-#describe.mean.sd(data_know_austria$knowledge_austria)
-#data_know_austria %>% filter(knowledge_austria > 2) %>% count() %>% as.character()
-```
-Der Kenntnisstand der Befragten über das Tagesgeschehen in Österreich ist sehr gering (`r describe.mean.sd(data_know_austria$knowledge_austria)`).
-Gerade einmal `r data_know_austria %>% filter(knowledge_austria > 2) %>% count() %>% as.character()` von `r user` Befragten geben an, dass sie mindestens etwas Ahnung vom österreichischen Tagesgeschehen haben.
-
-## Anlernen
-
-```{r Anlernen_describe}
-#describe.mean.sd(data_anlernen$Anlernen_SUM_bew)
-#describe.mean.sd(data_anlernen$anlernen_ges_bew)
-#describe.r(cor.test(data_anlernen$Anlernen_SUM_bew,data_anlernen$anlernen_ges_bew))
-data_anlernen %>% select(-ResponseId) %>%  psych::pairs.panels(hist.col="skyblue")
-
-```
-Die Befragten haben die präsentierten Empfehlungen während des Anlernes durchschnittlich bewertet (`r describe.mean.sd(data_anlernen$Anlernen_SUM_bew)`). Auch bei der anschließenden übergreifenden Bewertung des Anlernprozess, wurde dieser durchschnittlich bewertet (`r describe.mean.sd(data_anlernen$anlernen_ges_bew)`). Bei der Analyse, wie weit diese beiden Werte miteinander korrelieren, kam heraus, dass sie eine signifikant moderate poitive Beziehung miteinander haben (`r describe.r(cor.test(data_anlernen$Anlernen_SUM_bew,data_anlernen$anlernen_ges_bew))`).
-
-## UBCF
-```{r UBCF_describe}
-#describe.mean.sd(data_UBCF$UBCF_SUM_Artikel)
-#describe.mean.sd(data_UBCF$UBCF_ges_art_bew)
-#describe.mean.sd(data_UBCF$UBCF_RS_bew)
-
-data_UBCF %>% select(-ResponseId) %>%  psych::pairs.panels(hist.col="skyblue")
-data_UBCF %>% select(-ResponseId) %>%  psych::corr.test()
-```
-
-Die Befragten haben die empfohlenen Artikel des UBCF-Empfehlungssystem im Durchschnitt mittelmäßig bewertet (`r describe.mean.sd(data_UBCF$UBCF_SUM_Artikel)`). Auch die übergreifende Bewertung der Artikel (`r describe.mean.sd(data_UBCF$UBCF_ges_art_bew)`) zeigte ein ähnliches Bild. Die Bewertung des Empfehlungssystems an sich (`r describe.mean.sd(data_UBCF$UBCF_RS_bew)`) fiel hingegen leicht negativ aus.
-
-## SVD
-```{r SVD_describe}
-describe.mean.sd(data_SVD$SVD_SUM_Artikel)
-describe.mean.sd(data_SVD$SVD_ges_art_bew)
-describe.mean.sd(data_SVD$SVD_RS_bew)
-#describe.r(cor.test(data_UBCF$UBCF_SUM_Artikel,data_UBCF$UBCF_ges_art_bew,data_UBCF$UBCF_RS_bew))
-
-data_SVD %>% select(-ResponseId) %>%  psych::pairs.panels(hist.col="skyblue")
-data_SVD %>% select(-ResponseId) %>%  psych::corr.test()
-```
-
-Die Befragten haben die empfohlenen Artikel des SVD-Empfehlungssystem im Durchschnitt leicht negativ bewertet (`r describe.mean.sd(data_UBCF$UBCF_SUM_Artikel)`). Die übergreifende Bewertung der Artikel (`r describe.mean.sd(data_UBCF$UBCF_ges_art_bew)`) fiel etwas besser aus. Die Bewertung des Empfehlungssystems an sich (`r describe.mean.sd(data_UBCF$UBCF_RS_bew)`) fiel hingegen wieder leicht negativ aus.
 
 # Einfluss Alter
 ## KUT
@@ -664,7 +59,112 @@ Zwischen den Altersgruppen ist beim KUT kein signifikanter Unterschied beim KUT 
 
 ```{r}
 # Mittelwert nach Altersgruppe
-psych::describeBy(data_priv$RS_Privacy_Consern, data_demograph$age_grp, mat = TRUE)
-describe.aov(aov(data_priv$RS_Privacy_Consern ~ data_demograph$age_grp))
+psych::describeBy(data_priv$RS_Privacy_Trust, data_demograph$age_grp, mat = TRUE)
+describe.aov(aov(data_priv$RS_Privacy_Trust ~ data_demograph$age_grp))[1]
 ```
 
+# Einfluss auf Bewertungen
+
+## Geschlecht
+```{r bewertung_geschlecht}
+# Anlernen
+t.test(data_anlernen$Anlernen_SUM_bew ~ data_demograph$gender) # knapp nicht
+wilcox.test(data_anlernen$anlernen_ges_bew ~ data_demograph$gender) # nicht
+
+# UBCF
+t.test(data_UBCF$UBCF_SUM_Artikel ~ data_demograph$gender) # ultra knapp nicht
+wilcox.test(data_UBCF$UBCF_ges_art_bew ~ data_demograph$gender) # nicht
+wilcox.test(data_UBCF$UBCF_RS_bew ~ data_demograph$gender) # knapp nicht
+
+# SVD
+wilcox.test(data_SVD$SVD_SUM_Artikel ~ data_demograph$gender) # nicht
+wilcox.test(data_SVD$SVD_ges_art_bew ~ data_demograph$gender) # nicht
+t.test(data_SVD$SVD_RS_bew ~ data_demograph$gender) # nicht
+```
+
+## Altersgruppe
+```{r bewertung_alters_grp}
+# Anlernen
+summary(aov(data_anlernen$Anlernen_SUM_bew ~ data_demograph$age_grp)) # nicht
+kruskal.test(data_anlernen$anlernen_ges_bew, data_demograph$age_grp) # nicht
+
+# UBCF
+summary(aov(data_UBCF$UBCF_SUM_Artikel ~ data_demograph$age_grp)) # nicht
+kruskal.test(data_UBCF$UBCF_ges_art_bew, data_demograph$age_grp) # nicht
+kruskal.test(data_UBCF$UBCF_RS_bew, data_demograph$age_grp) # nicht
+
+# SVD
+kruskal.test(data_SVD$SVD_SUM_Artikel, data_demograph$age_grp) # nicht
+kruskal.test(data_SVD$SVD_ges_art_bew, data_demograph$age_grp) # nicht
+summary(aov(data_SVD$SVD_RS_bew ~ data_demograph$age_grp)) # nicht
+```
+
+## KUT
+```{r bewertung_KUT}
+# Anlernen
+cor.test(data_anlernen$Anlernen_SUM_bew, data_kut$KUT) # < 0.05*
+cor.test(data_anlernen$anlernen_ges_bew, data_kut$KUT, method = "spearman")  # nicht
+
+# UBCF
+cor.test(data_UBCF$UBCF_SUM_Artikel, data_kut$KUT) # < 0.05*
+cor.test(data_UBCF$UBCF_ges_art_bew, data_kut$KUT, method = "spearman") # nicht
+cor.test(data_UBCF$UBCF_RS_bew, data_kut$KUT, method = "spearman") # nicht
+
+# SVD
+cor.test(data_SVD$SVD_SUM_Artikel, data_kut$KUT, method = "spearman")  # < 0.05*
+cor.test(data_SVD$SVD_ges_art_bew, data_kut$KUT, method = "spearman") # nicht
+cor.test(data_SVD$SVD_RS_bew, data_kut$KUT) # nicht
+```
+
+## RS Privacy Trust
+```{r bewertung_privacy_Trust}
+# Anlernen
+cor.test(data_anlernen$Anlernen_SUM_bew, data_priv$RS_Privacy_Trust) # nicht
+cor.test(data_anlernen$anlernen_ges_bew, data_priv$RS_Privacy_Trust, method = "spearman")  # ultra knapp nicht
+
+# UBCF
+cor.test(data_UBCF$UBCF_SUM_Artikel, data_priv$RS_Privacy_Trust) # < 0.05*
+cor.test(data_UBCF$UBCF_ges_art_bew, data_priv$RS_Privacy_Trust, method = "spearman") # nicht
+cor.test(data_UBCF$UBCF_RS_bew, data_priv$RS_Privacy_Trust, method = "spearman") # nicht
+
+# SVD
+cor.test(data_SVD$SVD_SUM_Artikel, data_priv$RS_Privacy_Trust, method = "spearman")  # nicht
+cor.test(data_SVD$SVD_ges_art_bew, data_priv$RS_Privacy_Trust, method = "spearman") # < 0.05*
+cor.test(data_SVD$SVD_RS_bew, data_priv$RS_Privacy_Trust) # < 0.01**
+```
+
+## Themenwahl
+
+```{r bewertung_themenwahl}
+# Anlernen
+summary(aov(data_anlernen$Anlernen_SUM_bew ~ data_topicSelect$interestingTopic)) # nicht
+kruskal.test(data_anlernen$anlernen_ges_bew, data_topicSelect$interestingTopic) # nicht
+
+# UBCF
+summary(aov(data_UBCF$UBCF_SUM_Artikel ~ data_topicSelect$interestingTopic)) # nicht
+kruskal.test(data_UBCF$UBCF_ges_art_bew, data_topicSelect$interestingTopic) # nicht
+kruskal.test(data_UBCF$UBCF_RS_bew, data_topicSelect$interestingTopic) # nicht
+
+# SVD
+kruskal.test(data_SVD$SVD_SUM_Artikel, data_topicSelect$interestingTopic) # nicht
+kruskal.test(data_SVD$SVD_ges_art_bew, data_topicSelect$interestingTopic) # nicht
+summary(aov(data_SVD$SVD_RS_bew ~ data_topicSelect$interestingTopic)) # nicht
+```
+
+## Covarianz KUT & Privacy
+```{r bewertung_KUT_AND_privacy_Trust}
+# Da sich die Ergebnisse zwischen den nicht-parametrischen und parametrischen Tests nicht stark unterscheiden, werden im Folgenden zur Vereinfachung auch parametrische Tests angewendet, wenn die Variablen nicht normalverteilt sind.
+
+# Anlernen
+summary(aov(data_anlernen$Anlernen_SUM_bew ~ data_kut$KUT + data_priv$RS_Privacy_Trust)) # nur KUT *
+summary(aov(data_anlernen$anlernen_ges_bew ~ data_kut$KUT + data_priv$RS_Privacy_Trust)) # nicht
+# UBCF
+summary(aov(data_UBCF$UBCF_SUM_Artikel ~ data_kut$KUT + data_priv$RS_Privacy_Trust)) # nur KUT *
+summary(aov(data_UBCF$UBCF_ges_art_bew ~ data_kut$KUT + data_priv$RS_Privacy_Trust)) # nicht
+summary(aov(data_UBCF$UBCF_RS_bew ~ data_kut$KUT + data_priv$RS_Privacy_Trust)) # nur Trust *
+
+# SVD
+summary(aov(data_SVD$SVD_SUM_Artikel ~ data_kut$KUT + data_priv$RS_Privacy_Trust)) # nur KUT *
+summary(aov(data_SVD$SVD_ges_art_bew ~ data_kut$KUT + data_priv$RS_Privacy_Trust)) # nur Trust *
+summary(aov(data_SVD$SVD_RS_bew ~ data_kut$KUT + data_priv$RS_Privacy_Trust)) # nur Trust ***
+```
