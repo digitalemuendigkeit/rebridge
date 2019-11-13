@@ -39,6 +39,10 @@ library(apastats)
 ```{r child = 'Stichprobenbeschreibung.Rmd'}
 ```
 
+# Korrelationen
+```{r child = 'Korrelationen.Rmd'}
+```
+
 # Einfluss Alter
 ## KUT
 ```{r KUT_age_effekt}

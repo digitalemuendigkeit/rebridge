@@ -13,6 +13,18 @@ output:
 
 An der Umfrage haben insgesamt `r length(raw$ResponseId)` Personen teilgenommen. Davon haben `r length(data_cleaned$ResponseId)` Personen die Umfrage vollständig abgeschlossen und werden in der folgenden Auswertung berücksichtigt. Dies entspricht einer Abbrecherquote von `r (1 - length(data_demograph$ResponseId)/length(raw$ResponseId))*100` %.
 
+```{r setupTMP, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(haven)
+#library(sjPlot)
+#library(sjlabelled)
+#library(kableExtra)
+#library(knitr)
+library(apastats)
+```
+
+
 ## Geschlecht
 ```{r  gender_graph}
 data_demograph  %>% ggplot() + 
@@ -262,18 +274,18 @@ Wie aus der Grafik erkennbar ist, gibt es bei der Themenwahl einen signifikanten
 ## Freigabe Datentypen für RS
 
 ```{r data_publishing}
-data_pub_gen <- data_publishing %>% select(-ResponseId)
-data_pub_gen$RS_dataPublishing_1 <- as.numeric(data_pub_gen$RS_dataPublishing_1)
-data_pub_gen$RS_dataPublishing_2 <- as.numeric(data_pub_gen$RS_dataPublishing_2)
-data_pub_gen$RS_dataPublishing_3 <- as.numeric(data_pub_gen$RS_dataPublishing_3)
-data_pub_gen$RS_dataPublishing_4 <- as.numeric(data_pub_gen$RS_dataPublishing_4)
-data_pub_gen$RS_dataPublishing_5 <- as.numeric(data_pub_gen$RS_dataPublishing_5)
-data_pub_gen$RS_dataPublishing_6 <- as.numeric(data_pub_gen$RS_dataPublishing_6)
-data_pub_gen$RS_dataPublishing_7 <- as.numeric(data_pub_gen$RS_dataPublishing_7)
+mrg_data_pub_gen <- data_publishing %>% select(-ResponseId)
+mrg_data_pub_gen$RS_dataPublishing_1 <- as.numeric(mrg_data_pub_gen$RS_dataPublishing_1)
+mrg_data_pub_gen$RS_dataPublishing_2 <- as.numeric(mrg_data_pub_gen$RS_dataPublishing_2)
+mrg_data_pub_gen$RS_dataPublishing_3 <- as.numeric(mrg_data_pub_gen$RS_dataPublishing_3)
+mrg_data_pub_gen$RS_dataPublishing_4 <- as.numeric(mrg_data_pub_gen$RS_dataPublishing_4)
+mrg_data_pub_gen$RS_dataPublishing_5 <- as.numeric(mrg_data_pub_gen$RS_dataPublishing_5)
+mrg_data_pub_gen$RS_dataPublishing_6 <- as.numeric(mrg_data_pub_gen$RS_dataPublishing_6)
+mrg_data_pub_gen$RS_dataPublishing_7 <- as.numeric(mrg_data_pub_gen$RS_dataPublishing_7)
 
-data_pub_gen <- data_pub_gen %>% pivot_longer(cols= c(starts_with("RS")), names_to = "Datentyp", values_to = "Bereitschaft")
+mrg_data_pub_gen <- mrg_data_pub_gen %>% pivot_longer(cols= c(starts_with("RS")), names_to = "Datentyp", values_to = "Bereitschaft")
 
-ggplot(data_pub_gen, 
+ggplot(mrg_data_pub_gen, 
        aes(x=reorder(Datentyp, Bereitschaft, FUN = mean), 
            y=Bereitschaft))+
       geom_violin(alpha = 0.6, 
@@ -317,9 +329,9 @@ Die Befragten machen sich leichte Sorgen um ihre Privatsphäre beim Verwenden vo
 
 ## Einschätzung Qualität
 ```{r quality_expection}
-data_empf_gen <- data_RS_einschaetzung %>% select(-ResponseId) %>% pivot_longer(cols= starts_with("einsch"), names_to = "Empfehlungssystem", values_to = "Genauigkeit")
+mrg_data_empf_gen <- data_RS_einschaetzung %>% select(-ResponseId) %>% pivot_longer(cols= starts_with("einsch"), names_to = "Empfehlungssystem", values_to = "Genauigkeit")
 
-ggplot(data_empf_gen, 
+ggplot(mrg_data_empf_gen, 
        aes(x=reorder(Empfehlungssystem, Genauigkeit, FUN = mean), 
            y=Genauigkeit))+
       geom_violin(alpha = 0.6, 

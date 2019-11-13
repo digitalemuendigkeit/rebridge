@@ -1,0 +1,75 @@
+---
+title: "Korrelationen"
+author: "Stefan Ahlers"
+date: "13 11 2019"
+output:
+  html_document: 
+    toc: true
+    toc_float: true
+    code_folding : hide
+    df_print : paged
+  pdf_document: default
+---
+
+```{r setupC, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(haven)
+#library(sjPlot)
+#library(sjlabelled)
+#library(kableExtra)
+#library(knitr)
+library(apastats)
+```
+
+## Einschätzung Empfehlungssystem
+```{r cor_RS_einsch}
+cor_RS_einsch <- data_demograph %>%  
+                        select(ResponseId,age) %>% 
+                        inner_join(., data_kut, by="ResponseId") %>% 
+                        inner_join(., data_priv, by="ResponseId") %>% 
+                        inner_join(., data_RS_einschaetzung, by="ResponseId") %>% 
+                        select(-ResponseId)
+  
+cor_RS_einsch %>%  psych::pairs.panels(hist.col="skyblue")
+cor_RS_einsch %>%   psych::corr.test()
+```
+
+## Anlernen
+```{r cor_RS_anlernen}
+cor_RS_anlernen <- data_demograph %>%  
+                        select(ResponseId,age) %>% 
+                        inner_join(., data_kut, by="ResponseId") %>% 
+                        inner_join(., data_priv, by="ResponseId") %>% 
+                        inner_join(., data_anlernen, by="ResponseId") %>% 
+                        select(-ResponseId)
+  
+cor_RS_anlernen %>%  psych::pairs.panels(hist.col="skyblue")
+cor_RS_anlernen %>%  psych::corr.test()
+```
+
+## UBCF
+```{r cor_UBCF}
+cor_UBCF <- data_demograph %>%  
+                        select(ResponseId,age) %>% 
+                        inner_join(., data_kut, by="ResponseId") %>% 
+                        inner_join(., data_priv, by="ResponseId") %>% 
+                        inner_join(., data_UBCF, by="ResponseId") %>% 
+                        select(-ResponseId)
+  
+cor_UBCF  %>%  psych::pairs.panels(hist.col="skyblue")
+cor_UBCF  %>%  psych::corr.test()
+```
+
+## SVD
+```{r cor_SVD}
+cor_SVD <- data_demograph %>%  
+                        select(ResponseId,age) %>% 
+                        inner_join(., data_kut, by="ResponseId") %>% 
+                        inner_join(., data_priv, by="ResponseId") %>% 
+                        inner_join(., data_SVD, by="ResponseId") %>% 
+                        select(-ResponseId)
+  
+cor_SVD  %>%  psych::pairs.panels(hist.col="skyblue")
+cor_SVD  %>%  psych::corr.test()
+```
