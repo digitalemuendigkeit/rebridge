@@ -59,6 +59,14 @@ cor_UBCF <- data_demograph %>%
   
 cor_UBCF  %>%  psych::pairs.panels(hist.col="skyblue")
 cor_UBCF  %>%  psych::corr.test()
+
+cor_UBCF_einsch <- data_RS_einschaetzung %>% 
+                     inner_join(., data_UBCF, by="ResponseId") %>% 
+                     select(-ResponseId)
+
+cor_UBCF_einsch  %>%  psych::pairs.panels(hist.col="skyblue")
+cor_UBCF_einsch  %>%  psych::corr.test()
+
 ```
 
 ## SVD
@@ -72,4 +80,11 @@ cor_SVD <- data_demograph %>%
   
 cor_SVD  %>%  psych::pairs.panels(hist.col="skyblue")
 cor_SVD  %>%  psych::corr.test()
+
+cor_SVD_einsch <- data_RS_einschaetzung %>% 
+                     inner_join(., data_SVD, by="ResponseId") %>% 
+                     select(-ResponseId)
+
+cor_SVD_einsch  %>%  psych::pairs.panels(hist.col="skyblue")
+cor_SVD_einsch  %>%  psych::corr.test()
 ```
