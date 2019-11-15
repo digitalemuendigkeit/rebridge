@@ -1,0 +1,27 @@
+---
+title: "Backend_Prediction"
+output: html_document
+---
+```{r setupBack, include=FALSE}
+library(recommenderlab)
+library(dplyr)
+library(readr)
+library(feather)
+```
+
+```{r prediction}
+m <- read_feather("./ratings_comments.feather")  %>% as.data.frame() %>% as("realRatingMatrix")
+rec_UBCF <- Recommender(m, method = "UBCF")
+rec_SVD <- Recommender(m, method = "UBCF")
+
+pred_UBCF <- recommenderlab::predict(rec_UBCF, m, data = m, type="ratings")
+
+test <- (as(pred_UBCF, "matrix"))
+test2 <- as.data.frame(test)
+
+test2$`4903`[row.names(test2) == "\"R_06zkMiYVH33j8fD\""]
+```
+
+
+
+
