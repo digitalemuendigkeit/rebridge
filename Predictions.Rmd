@@ -3,25 +3,98 @@ title: "Backend_Prediction"
 output: html_document
 ---
 ```{r setupBack, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 library(recommenderlab)
 library(dplyr)
 library(readr)
 library(feather)
 ```
 
-```{r prediction}
+```{r prediction_prepare}
 m <- read_feather("./ratings_comments.feather")  %>% as.data.frame() %>% as("realRatingMatrix")
 rec_UBCF <- Recommender(m, method = "UBCF")
-rec_SVD <- Recommender(m, method = "UBCF")
+rec_SVD <- Recommender(m, method = "SVD")
 
-pred_UBCF <- recommenderlab::predict(rec_UBCF, m, data = m, type="ratings")
-
-test <- (as(pred_UBCF, "matrix"))
-test2 <- as.data.frame(test)
-
-test2$`4903`[row.names(test2) == "\"R_06zkMiYVH33j8fD\""]
+data_articleIDs <- data_cleaned  %>% select(ResponseId, starts_with("ID_A"), starts_with("ID_B"), starts_with("loop")) %>%  labelled::remove_labels() %>% labelled::remove_attributes(. , "display_width")
 ```
 
+```{r prediction_UBCF}
+# TODO: Nutzerbewertung entfernen?
+pred_UBCF <- recommenderlab::predict(rec_UBCF, m, data = m, type="ratingMatrix")
+
+tmp <- (as(pred_UBCF, "matrix"))
+pred_UBCF_matrix <- as.data.frame(tmp)
+
+
+## for-Schleife zur Artikel ID Abfrage
+
+pred_A1 <- vector()
+pred_A2 <- vector()
+pred_A3 <- vector()
+pred_A4 <- vector()
+
+for (i in 0:length(data_articleIDs$ResponseId)){
+  user <- data_articleIDs[i,]
+  user_ID <- paste("\"",user$ResponseId,"\"", sep = "")
+  row_num <- which(row.names(pred_UBCF_matrix) %in% user_ID)
+  
+  pred_A1 <- c(pred_A1, pred_UBCF_matrix[row_num,] %>% select(user$ID_A1) %>% as.numeric())
+  pred_A2 <- c(pred_A2, pred_UBCF_matrix[row_num,] %>% select(user$ID_A2) %>% as.numeric())
+  pred_A3 <- c(pred_A3, pred_UBCF_matrix[row_num,] %>% select(user$ID_A3) %>% as.numeric())
+  pred_A4 <- c(pred_A4, pred_UBCF_matrix[row_num,] %>% select(user$ID_A4) %>% as.numeric())
+}  
+
+data_articleIDs <- tibble::add_column(data_articleIDs, pred_A1)
+data_articleIDs <- tibble::add_column(data_articleIDs, pred_A2)
+data_articleIDs <- tibble::add_column(data_articleIDs, pred_A3)
+data_articleIDs <- tibble::add_column(data_articleIDs, pred_A4)
+
+data_articleIDs %>% select(loop1.1_1, pred_A1) %>% psych::pairs.panels(hist.col="skyblue")
+data_articleIDs %>% select(loop1.2_1, pred_A2) %>% psych::pairs.panels(hist.col="skyblue")
+data_articleIDs %>% select(loop1.3_1, pred_A3) %>% psych::pairs.panels(hist.col="skyblue")
+data_articleIDs %>% select(loop1.4_1, pred_A4) %>% psych::pairs.panels(hist.col="skyblue")
+
+```
+
+```{r prediction_SVD}
+# TODO: Nutzerbewertung entfernen?
+pred_SVD <- recommenderlab::predict(rec_SVD, m, data = m, type="ratingMatrix")
+
+tmp <- (as(pred_SVD, "matrix"))
+pred_SVD_matrix <- as.data.frame(tmp)
+
+
+## for-Schleife zur Artikel ID Abfrage
+
+pred_B1 <- vector()
+pred_B2 <- vector()
+pred_B3 <- vector()
+pred_B4 <- vector()
+
+for (i in 1:length(data_articleIDs$ResponseId)){
+  user <- data_articleIDs[i,]
+  user_ID <- paste("\"",user$ResponseId,"\"", sep = "")
+  row_num <- which(row.names(pred_SVD_matrix) %in% user_ID)
+  
+  pred_B1 <- c(pred_B1, pred_SVD_matrix[row_num,] %>% select(user$ID_B1) %>% as.numeric())
+  pred_B2 <- c(pred_B2, pred_SVD_matrix[row_num,] %>% select(user$ID_B2) %>% as.numeric())
+  pred_B3 <- c(pred_B3, pred_SVD_matrix[row_num,] %>% select(user$ID_B3) %>% as.numeric())
+  pred_B4 <- c(pred_B4, pred_SVD_matrix[row_num,] %>% select(user$ID_B4) %>% as.numeric())
+}  
+
+data_articleIDs <- tibble::add_column(data_articleIDs, pred_B1)
+data_articleIDs <- tibble::add_column(data_articleIDs, pred_B2)
+data_articleIDs <- tibble::add_column(data_articleIDs, pred_B3)
+data_articleIDs <- tibble::add_column(data_articleIDs, pred_B4)
+
+
+data_articleIDs %>% select(loop2.1_1, pred_B1) %>% psych::pairs.panels(hist.col="skyblue")
+data_articleIDs %>% select(loop2.2_1, pred_B2) %>% psych::pairs.panels(hist.col="skyblue")
+data_articleIDs %>% select(loop2.3_1, pred_B3) %>% psych::pairs.panels(hist.col="skyblue")
+data_articleIDs %>% select(loop2.4_1, pred_B4) %>% psych::pairs.panels(hist.col="skyblue")
+
+
+```
 
 
 
