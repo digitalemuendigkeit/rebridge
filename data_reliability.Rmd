@@ -19,27 +19,27 @@ Im Folgenden werden die einzelnen Skalen auf ihre Reliabilität geprüft und ggf
       6 = positiv
 -->
 ```{r bigFive}
-big_df <- data_cleaned %>% select(starts_with("bigf"))
+rel_big <- data_cleaned %>% select(starts_with("bigf"))
 
 #big_df %>% map(get_label) %>% str_split("-") -> labels_bf 
 #for (label in labels_bf){
 #  print(label[2])
 #}
 
-keys_bf  <- list(offenheit = c("-bigFive_5", "bigFive_10"),
-                 gewissenhaft  = c("-bigFive_3", "bigFive_8"),
-                 extraversion = c("-bigFive_1", "bigFive_6"),
-                 vertraeglich = c("bigFive_2", "-bigFive_7"),
-                 neuro = c("bigFive_4", "-bigFive_9"))
+keys_bf  <- list(offenheit = c("-bigFive_off_neg", "bigFive_off_pos"),
+                 gewissenhaft  = c("-bigFive_gew_neg", "bigFive_gew_pos"),
+                 extraversion = c("-bigFive_ext_neg", "bigFive_ext_pos"),
+                 vertraeglich = c("bigFive_ver_pos", "-bigFive_ver_neg"),
+                 neuro = c("bigFive_neu_pos", "-bigFive_neu_neg"))
 
-result <- psych::scoreItems(keys = keys_bf , big_df)
+result <- psych::scoreItems(keys = keys_bf , rel_big)
 result
 #result$scores
 
 # Reliabilität zu schlecht, daher keine Auswertung!
 # data <- bind_cols(data_cleaned, as.data.frame(result$scores))
 ```
-Die Reliabilität von den Offenheit ($\alpha =$ `r result$alpha[1]`) , Gewissenhaftigkeit ($\alpha =$ `r result$alpha[2]`), Verträglichkeit ($\alpha =$ `r result$alpha[4]`) und Neurozität ($\alpha =$ `r result$alpha[5]`) ist jeweils kleiner als $\alpha = .6$. Einzig die Aussagen zur Extraversion ($\alpha =$ `r result$alpha[3]`) weist eine auswertbare Realibität auf. Daher wird auf eine Auswertung der Big Five im Folgenden verzichtet.
+Die Reliabilität von den Gewissenhaftigkeit ($\alpha =$ `r result$alpha[2]`), Verträglichkeit ($\alpha =$ `r result$alpha[4]`) und Neurozität ($\alpha =$ `r result$alpha[5]`) ist jeweils kleiner als $\alpha = .6$. Einzig die Aussagen zur Extraversion ($\alpha =$ `r result$alpha[3]`) weist eine gute und Offenheit ($\alpha =$ `r result$alpha[1]`) eine noch akzeptable auswertbare Realibität auf. Daher wird auf eine Auswertung der Big Five im Folgenden verzichtet.
 
 ## KUT
 <!--- Auswertung des KUT 
@@ -48,7 +48,7 @@ Die Reliabilität von den Offenheit ($\alpha =$ `r result$alpha[1]`) , Gewissenh
 -->
 ```{r KUT}
 
-kut_df <- data_cleaned %>% select(starts_with("kut"))
+rel_kut <- data_cleaned %>% select(starts_with("kut"))
 
 #kut_df %>% map(get_label) %>% str_split("-") -> labels_bf 
 
@@ -61,7 +61,7 @@ keys_bf  <- list(KUT = c("-kut_1", "-kut_2", "kut_3", "-kut_4", "-kut_5", "-kut_
 #result_alpha <- psych::alpha(kut_df, check.keys = TRUE)
 #result_alpha
 
-result <- psych::scoreItems(keys = keys_bf , kut_df)
+result <- psych::scoreItems(keys = keys_bf , rel_kut)
 result
 
 #result$scores
@@ -71,66 +71,65 @@ data_kut <-bind_cols(data_kut, as.data.frame(result$scores))
 ```
 Der KUT weißt mit ($\alpha =$ `r result$alpha[1]`) eine gute Relibilität auf.
 
-## Privacy RecSys
+## Privacy Trust RecSys
 <!--- Auswertung des RS Privacy 
       1 = sehr geringes Vertrauen in die Privatsphäre
       6 = sehr großes Vertrauen in der Privatsphäre
 -->
 ```{r Privacy_RS}
 
-privacy_df <- data_cleaned %>% select(starts_with("RS_privacy"))
+rel_RS_trust <- data_cleaned %>% select(starts_with("RS_privacy"))
 
 #privacy_df %>% map(get_label) %>% str_split("-") -> labels_bf 
 #for (label in labels_bf){
 #print(label[3])
 #}
 
-keys_bf  <- list(RS_Privacy_Trust = c("-RS_privacy_1","-RS_privacy_2","RS_privacy_3","-RS_privacy_4","RS_privacy_5"))
+keys_bf  <- list(RS_Privacy_Trust = c("-RS_privacy_trust_1","-RS_privacy_trust_2","RS_privacy_trust_3","-RS_privacy_trust_4","RS_privacy_trust_5"))
 
 #result_alpha <- psych::alpha(privacy_df, check.keys = TRUE)
 #result_alpha
 
-result <- psych::scoreItems(keys = keys_bf , privacy_df)
+result <- psych::scoreItems(keys = keys_bf , rel_RS_trust)
 result
 #result$scores
 
-data_priv <- data_cleaned %>% select(ResponseId)
-data_priv <-bind_cols(data_priv, as.data.frame(result$scores))
+data_RS_trust <- data_cleaned %>% select(ResponseId)
+data_RS_trust <- bind_cols(data_RS_trust, as.data.frame(result$scores))
 ```
 
-Die Skala zur Einschätzugn der Privatsphäre eines RS weißt mit ($\alpha =$ `r result$alpha[1]`) eine gute Relibilität auf.
+Die Skala zur Einschätzung der Privatsphäre eines RS weißt mit ($\alpha =$ `r result$alpha[1]`) eine gute Relibilität auf.
 
 ## Anlernen
 <!--- Auswertung Bewertungen einzenler Artikel beim Anlernen
       1 = sehr schlecht
       6 = sehr gut
 -->
-```{r Bewertung_SUM_Anlernen}
-anlernen_df <- data_cleaned %>% select(starts_with("Anlernen"),starts_with("firstReviewArticles"))
+```{r Anlernen_reliability}
+rel_anlernen <- data_cleaned %>% select(starts_with("Anlernen"),starts_with("firstReviewArticles"))
 
 # Neucodieren der einzelnen Artikelbewertungen
-anlernen_df$Anlernen1_1<-recode(anlernen_df$Anlernen1_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-anlernen_df$Anlernen2_1<-recode(anlernen_df$Anlernen2_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-anlernen_df$Anlernen3_1<-recode(anlernen_df$Anlernen3_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-anlernen_df$Anlernen4_1<-recode(anlernen_df$Anlernen4_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-anlernen_df$Anlernen5_1<-recode(anlernen_df$Anlernen5_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-anlernen_df$Anlernen6_1<-recode(anlernen_df$Anlernen6_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-anlernen_df$Anlernen7_1<-recode(anlernen_df$Anlernen7_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+rel_anlernen$Anlernen1_1<-recode(rel_anlernen$Anlernen1_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+rel_anlernen$Anlernen2_1<-recode(rel_anlernen$Anlernen2_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+rel_anlernen$Anlernen3_1<-recode(rel_anlernen$Anlernen3_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+rel_anlernen$Anlernen4_1<-recode(rel_anlernen$Anlernen4_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+rel_anlernen$Anlernen5_1<-recode(rel_anlernen$Anlernen5_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+rel_anlernen$Anlernen6_1<-recode(rel_anlernen$Anlernen6_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+rel_anlernen$Anlernen7_1<-recode(rel_anlernen$Anlernen7_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
 
 keys_bf  <- list(Anlernen_SUM_bew = c("Anlernen1_1","Anlernen2_1","Anlernen3_1","Anlernen4_1","Anlernen5_1","Anlernen6_1","Anlernen7_1"),
-                 anlernen_ges_bew = c("firstReviewArticles_1","firstReviewArticles_2","firstReviewArticles_6"))
+                 Anlernen_ArticleReview_quality = c("Anlernen_ArticleReview_quality1","Anlernen_ArticleReview_quality2","Anlernen_ArticleReview_quality3"))
 
-#result_alpha <- psych::alpha(anlernen_df, check.keys = TRUE)
+#result_alpha <- psych::alpha(rel_anlernen, check.keys = TRUE)
 #result_alpha
 
-result <- psych::scoreItems(keys = keys_bf , anlernen_df)
+result <- psych::scoreItems(keys = keys_bf , rel_anlernen)
 result
 #result$scores
 
 data_anlernen <- data_cleaned %>% select(ResponseId)
-data_anlernen <-bind_cols(data_anlernen, as.data.frame(result$scores))
-
-
+data_anlernen <- bind_cols(data_anlernen, as.data.frame(result$scores))
+data_anlernen <-  data_cleaned %>%  select(ResponseId, Anlernen_ArticleReview_diversity, Anlernen_ArticleReview_novelty, Anlernen_ArticleReview_serendipity, Anlernen_ArticleReview_relevance) %>%  inner_join(., data_anlernen, by="ResponseId")
 ```
 Aus den Bewertungen der einzelnen Artikeln, die während des Anlernen der Empfehlungssysteme getätigt werden, lässt sich eine durchschnittliche Bewertung berechnen. Diese durchschnittlich Bewertung weißt mit ($\alpha =$ `r result$alpha[1]`) eine schwache Relibilität der einzelnen Bewertungen auf. 
 
@@ -141,26 +140,26 @@ Aus drei der sieben Aussagen zur Bewertung des Anlernsystems wurde ein Durchschn
       1 = sehr schlecht
       6 = sehr gut
 -->
-```{r UBCF}
-UBCF_df <- data_cleaned %>% select(starts_with("loop1"),starts_with("UBCF"))
+```{r UBCF_reliability}
+rel_UBCF <- data_cleaned %>% select(starts_with("loop1"),starts_with("UBCF"))
 
 # Neucodieren der einzelnen Artikelbewertungen
-UBCF_df$loop1.1_1<-recode(UBCF_df$loop1.1_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-UBCF_df$loop1.2_1<-recode(UBCF_df$loop1.2_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-UBCF_df$loop1.3_1<-recode(UBCF_df$loop1.3_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-UBCF_df$loop1.4_1<-recode(UBCF_df$loop1.4_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+rel_UBCF$loop1.1_1<-recode(rel_UBCF$loop1.1_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+rel_UBCF$loop1.2_1<-recode(rel_UBCF$loop1.2_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+rel_UBCF$loop1.3_1<-recode(rel_UBCF$loop1.3_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+rel_UBCF$loop1.4_1<-recode(rel_UBCF$loop1.4_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
 
 keys_bf  <- list(UBCF_SUM_Artikel = c("loop1.1_1","loop1.2_1","loop1.3_1","loop1.4_1"),
-                 UBCF_ges_art_bew = c("UBCF_ArticleReview_1","UBCF_ArticleReview_2","UBCF_ArticleReview_6"),
+                 UBCF_ArticleReview_quality = c("UBCF_ArticleReview_quality1","UBCF_ArticleReview_quality2","UBCF_ArticleReview_quality3"),
                  UBCF_RS_bew = c("-UBCF_Review_1","UBCF_Review_2","-UBCF_Review_3","UBCF_Review_4","-UBCF_Review_5"))
 
-result <- psych::scoreItems(keys = keys_bf , UBCF_df)
+result <- psych::scoreItems(keys = keys_bf , rel_UBCF)
 result
 #result$scores
 
 data_UBCF <- data_cleaned %>% select(ResponseId)
 data_UBCF <-bind_cols(data_UBCF, as.data.frame(result$scores))
-
+data_UBCF <-  data_cleaned %>%  select(ResponseId, UBCF_ArticleReview_diversity, UBCF_ArticleReview_novelty, UBCF_ArticleReview_serendipity) %>%  inner_join(., data_UBCF, by="ResponseId")
 ```
 Aus den Bewertungen der einzelnen Artikeln, die das UBCF-Empfehlungssystem den Probanden empfohlen hat, lässt sich eine durchschnittliche Bewertung berechnen. Diese durchschnittlich Bewertung weißt mit ($\alpha =$ `r result$alpha[1]`) eine schwache Relibilität der einzelnen Bewertungen auf. 
 
@@ -174,27 +173,28 @@ Die Zusammenfassung der Scala, wie gut die Probanden das UBCF-Empfehlungssystem 
       1 = sehr schlecht
       6 = sehr gut
 -->
-```{r SVD}
-SVD_df <- data_cleaned %>% select(starts_with("loop2"),starts_with("SVD"))
+```{r SVD_reliability}
+rel_SVD <- data_cleaned %>% select(starts_with("loop2"),starts_with("SVD"))
 
 # Neucodieren der einzelnen Artikelbewertungen
-SVD_df$loop2.1_1<-recode(SVD_df$loop2.1_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-SVD_df$loop2.2_1<-recode(SVD_df$loop2.2_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-SVD_df$loop2.3_1<-recode(SVD_df$loop2.3_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-SVD_df$loop2.4_1<-recode(SVD_df$loop2.4_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+rel_SVD$loop2.1_1<-recode(rel_SVD$loop2.1_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+rel_SVD$loop2.2_1<-recode(rel_SVD$loop2.2_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+rel_SVD$loop2.3_1<-recode(rel_SVD$loop2.3_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+rel_SVD$loop2.4_1<-recode(rel_SVD$loop2.4_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
 
 keys_bf  <- list(SVD_SUM_Artikel = c("loop2.1_1","loop2.2_1","loop2.3_1","loop2.4_1"),
-                 SVD_ges_art_bew = c("SVD_articleReview_1","SVD_articleReview_2","SVD_articleReview_6"),
-                 SVD_RS_bew = c("-SVD_bewertung_1","SVD_bewertung_2","-SVD_bewertung_3","SVD_bewertung_4","-SVD_bewertung_5"))
+                 SVD_ArticleReview_quality = c("SVD_ArticleReview_quality1","SVD_ArticleReview_quality2","SVD_ArticleReview_quality3"),
+                 SVD_RS_bew = c("-SVD_Review_1","SVD_Review_2","-SVD_Review_3","SVD_Review_4","-SVD_Review_5"))
 
-result <- psych::scoreItems(keys = keys_bf , SVD_df)
+result <- psych::scoreItems(keys = keys_bf , rel_SVD)
 result
 #result$scores
 
 data_SVD <- data_cleaned %>% select(ResponseId)
 data_SVD <-bind_cols(data_SVD, as.data.frame(result$scores))
+data_SVD <-  data_cleaned %>%  select(ResponseId, SVD_ArticleReview_diversity, SVD_ArticleReview_novelty, SVD_ArticleReview_serendipity, SVD_ArticleReview_relevance) %>%  inner_join(., data_SVD, by="ResponseId")
 ```
-Aus den Bewertungen der einzelnen Artikeln, die das SVD-Empfehlungssystem den Probanden empfohlen hat, lässt sich eine durchschnittliche Bewertung berechnen. Diese durchschnittlich Bewertung weißt mit ($\alpha =$ `r result$alpha[1]`) eine schwache Relibilität der einzelnen Bewertungen auf. 
+Aus den Bewertungen der einzelnen Artikeln, die das SVD-Empfehlungssystem den Probanden empfohlen hat, lässt sich eine durchschnittliche Bewertung berechnen. Diese durchschnittlich Bewertung weißt mit ($\alpha =$ `r result$alpha[1]`) eine sehr schwache Relibilität der einzelnen Bewertungen auf. 
 
 Aus drei der sieben Aussagen zur Gesamtbewertung der Artikel des SVD-Empfehlungssystems, wurde ein Durchschnittswert berechnet, wie gut den Probanden die Artikel gefallen haben. Dieser Durchschnitsswert hat eine sehr gute Reliabilität von ($\alpha =$ `r result$alpha[2]`). Die anderen Aussagen decken andere Dimensionen ab und werden deswegen einzeln weiter betrachtet.
 

@@ -27,12 +27,12 @@ library(apastats)
 cor_RS_einsch <- data_demograph %>%  
                         select(ResponseId,age) %>% 
                         inner_join(., data_kut, by="ResponseId") %>% 
-                        inner_join(., data_priv, by="ResponseId") %>% 
+                        inner_join(., data_RS_trust, by="ResponseId") %>% 
                         inner_join(., data_RS_einschaetzung, by="ResponseId") %>% 
                         select(-ResponseId)
   
-cor_RS_einsch %>%  psych::pairs.panels(hist.col="skyblue")
-cor_RS_einsch %>%   psych::corr.test()
+cor_RS_einsch %>% psych::pairs.panels(hist.col="skyblue")
+cor_RS_einsch %>% psych::corr.test()
 ```
 
 ## Anlernen
@@ -40,7 +40,7 @@ cor_RS_einsch %>%   psych::corr.test()
 cor_RS_anlernen <- data_demograph %>%  
                         select(ResponseId,age) %>% 
                         inner_join(., data_kut, by="ResponseId") %>% 
-                        inner_join(., data_priv, by="ResponseId") %>% 
+                        inner_join(., data_RS_trust, by="ResponseId") %>% 
                         inner_join(., data_anlernen, by="ResponseId") %>% 
                         select(-ResponseId)
   
@@ -53,7 +53,7 @@ cor_RS_anlernen %>%  psych::corr.test()
 cor_UBCF <- data_demograph %>%  
                         select(ResponseId,age) %>% 
                         inner_join(., data_kut, by="ResponseId") %>% 
-                        inner_join(., data_priv, by="ResponseId") %>% 
+                        inner_join(., data_RS_trust, by="ResponseId") %>% 
                         inner_join(., data_UBCF, by="ResponseId") %>% 
                         select(-ResponseId)
   
@@ -74,7 +74,7 @@ cor_UBCF_einsch  %>%  psych::corr.test()
 cor_SVD <- data_demograph %>%  
                         select(ResponseId,age) %>% 
                         inner_join(., data_kut, by="ResponseId") %>% 
-                        inner_join(., data_priv, by="ResponseId") %>% 
+                        inner_join(., data_RS_trust, by="ResponseId") %>% 
                         inner_join(., data_SVD, by="ResponseId") %>% 
                         select(-ResponseId)
   

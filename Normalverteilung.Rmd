@@ -19,40 +19,51 @@ shapiro.test(data_demograph$age) # nicht normalverteilt
 shapiro.test(data_kut$KUT) # normalverteilt
  
 # RS Publishing:
-shapiro.test(data_publishing$RS_dataPublishing_1) # nicht normalverteilt
-shapiro.test(data_publishing$RS_dataPublishing_2) # nicht normalverteilt
-shapiro.test(data_publishing$RS_dataPublishing_3) # nicht normalverteilt
-shapiro.test(data_publishing$RS_dataPublishing_4) # nicht normalverteilt
-shapiro.test(data_publishing$RS_dataPublishing_5) # nicht normalverteilt
-shapiro.test(data_publishing$RS_dataPublishing_6) # nicht normalverteilt
-shapiro.test(data_publishing$RS_dataPublishing_7) # nicht normalverteilt
+shapiro.test(data_publishing$RS_thema) # nicht normalverteilt
+shapiro.test(data_publishing$RS_gelesene_artikel) # nicht normalverteilt
+shapiro.test(data_publishing$RS_hobby) # nicht normalverteilt
+shapiro.test(data_publishing$RS_demograph) # nicht normalverteilt
+shapiro.test(data_publishing$RS_standort) # nicht normalverteilt
+shapiro.test(data_publishing$RS_politik) # nicht normalverteilt
+shapiro.test(data_publishing$RS_religion) # nicht normalverteilt
 
 # RS Privacy Trust
-shapiro.test(data_priv$RS_Privacy_Trust) # nicht normalverteilt
+shapiro.test(data_RS_trust$RS_Privacy_Trust) # nicht normalverteilt
 
 # RS Einschätzung
 shapiro.test(data_RS_einschaetzung$einsch_random_1) # nicht normalverteilt
 shapiro.test(data_RS_einschaetzung$einsch_popular_1) # nicht normalverteilt
 shapiro.test(data_RS_einschaetzung$einsch_content_1) # nicht normalverteilt
 shapiro.test(data_RS_einschaetzung$einsch_UBCF_1) # nicht normalverteilt
-shapiro.test(data_RS_einschaetzung$einsch_IBCF_1) # ganz knappp normalverteilt
+shapiro.test(data_RS_einschaetzung$einsch_IBCF_1) # nicht normalverteilt
 shapiro.test(data_RS_einschaetzung$einsch_hybrid_1) # nicht normalverteilt
 
 # Knowledge Austria:
 shapiro.test(data_know_austria$knowledge_austria) # nicht normalverteilt
 
 # Anlernen:
+shapiro.test(data_anlernen$Anlernen_ArticleReview_diversity) # nicht normalverteilt
+shapiro.test(data_anlernen$Anlernen_ArticleReview_novelty) # nicht normalverteilt
+shapiro.test(data_anlernen$Anlernen_ArticleReview_serendipity) # nicht normalverteilt
+shapiro.test(data_anlernen$Anlernen_ArticleReview_relevance) # nicht normalverteilt
+shapiro.test(data_anlernen$Anlernen_ArticleReview_quality) # nicht normalverteilt
 shapiro.test(data_anlernen$Anlernen_SUM_bew) # normalverteilt
-shapiro.test(data_anlernen$anlernen_ges_bew) # nicht normalverteilt
 
 # UBCF:
-shapiro.test(data_UBCF$UBCF_SUM_Artikel) # ultra knapp!!
-shapiro.test(data_UBCF$UBCF_ges_art_bew) # nicht normalverteilt
+shapiro.test(data_UBCF$UBCF_ArticleReview_diversity) # nicht normalverteilt
+shapiro.test(data_UBCF$UBCF_ArticleReview_novelty) # nicht normalverteilt
+shapiro.test(data_UBCF$UBCF_ArticleReview_serendipity) # nicht normalverteilt
+shapiro.test(data_UBCF$UBCF_ArticleReview_quality) # nicht normalverteilt
+shapiro.test(data_UBCF$UBCF_SUM_Artikel) # nicht normalverteilt
 shapiro.test(data_UBCF$UBCF_RS_bew) # nicht normalverteilt
 
 # SVD:
+shapiro.test(data_SVD$SVD_ArticleReview_diversity) # nicht normalverteilt
+shapiro.test(data_SVD$SVD_ArticleReview_novelty) # nicht normalverteilt
+shapiro.test(data_SVD$SVD_ArticleReview_serendipity) # nicht normalverteilt
+shapiro.test(data_SVD$SVD_ArticleReview_relevance) # nicht normalverteilt
+shapiro.test(data_SVD$SVD_ArticleReview_quality) # nicht normalverteilt
 shapiro.test(data_SVD$SVD_SUM_Artikel) # nicht normalverteilt
-shapiro.test(data_SVD$SVD_ges_art_bew) # nicht normalverteilt
 shapiro.test(data_SVD$SVD_RS_bew) #  normalverteilt
 ```
 

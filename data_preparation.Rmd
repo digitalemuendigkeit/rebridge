@@ -24,7 +24,7 @@ library(apastats)
 
 <!--- Läd die Daten und speichert sie in "raw" -->
 ```{r read_data}
-raw <- read_sav(file= "data/191104-data.sav")
+raw <- read_sav(file= "data/191118-data.sav")
 ```
 
 <!--- Bereinigt den Datensatz und speichert ihn in "data_cleaned" -
@@ -39,10 +39,25 @@ data_cleaned <- raw %>% filter(Progress == 100) %>%    select(-StartDate,-EndDat
 data_demograph <- data_cleaned %>% select(ResponseId,gender,age,school,school_5_TEXT,education,education_6_TEXT,) # extrahiert die demographischen Daten
 data_newsConsum <- data_cleaned %>% select(ResponseId,starts_with("news"))
 data_topicSelect <- data_cleaned %>% select(ResponseId,interestingTopic)
-data_publishing <- data_cleaned %>% select(ResponseId,starts_with("RS_dataPublishing"))
+data_publishing <- data_cleaned %>% select(ResponseId,RS_thema,RS_gelesene_artikel,RS_hobby,RS_demograph,RS_standort,RS_politik,RS_politik,RS_religion)
 data_RS_einschaetzung <- data_cleaned %>% select(ResponseId,starts_with("einsch"))
 data_know_austria <- data_cleaned %>% select(ResponseId,knowledge_austria)
 
+```
+
+```{r age_group}
+# Alter der Probanden gruppiert #
+#   <= 21 Jahre → Gruppe 1      #
+# 22 - 35 Jahre → Gruppe 2      #
+# 36 - 50 Jahre → Gruppe 3      #
+# 50 - 64 Jahre → Gruppe 5      # 
+#    > 65 Jahre → Gruppe 6      #
+
+data_demograph <- data_demograph %>% mutate(age_grp = case_when(age < 22 ~ 1, 
+                                                                age  < 35 ~ 2,
+                                                                age  < 50 ~ 3,
+                                                                age  < 65 ~ 4,
+                                                                age >= 65 ~ 5))
 ```
 
 ```{r manual_school_cleanup}
@@ -53,12 +68,21 @@ data_demograph %>% filter(education == 6)
 tmp <- remove_all_labels(data_demograph) 
 tmp$school[data_demograph$ResponseId == "R_2wG3MUQ33RHKqke"] <- as.double("3") # Technischer Angestellter -> kein Abi
 tmp$school[data_demograph$ResponseId == "R_06zkMiYVH33j8fD"] <- as.double("4") # Hochschulstudium -> hat Abi
-tmp$school[data_demograph$ResponseId == "R_TtswfrNswLLAHMB"] <- as.double("3") # Fachoberschulreife -> Realschulabschluss
+tmp$school[data_demograph$ResponseId == "R_TtswfrNswLLAHMB"] <- as.double("3") # Fachoberschulreife -> mittlerer Schulabschluss
+tmp$school[data_demograph$ResponseId == "R_2vlfC53odvSCuYm"] <- as.double("4") # Bachelor -> hat Abi
+tmp$school[data_demograph$ResponseId == "R_21HdjqR5JfT8uzE"] <- as.double("3") # Höhere Handelsschule -> mittlerer Schulabschluss
 tmp$education[data_demograph$ResponseId == "R_3k5qjyWf0sl4Z4z"] <- as.double("4") # Fachhochschule
 tmp$education[data_demograph$ResponseId == "R_3p9n1RVYPPq3t8B"] <- as.double("2") # Fachwirt
 tmp$education[data_demograph$ResponseId == "R_2wG3MUQ33RHKqke"] <- as.double("2") # REFA Fachmann
 tmp$education[data_demograph$ResponseId == "R_3knDixnauuClcH0"] <- as.double("2") # Betriebswirt
 tmp$education[data_demograph$ResponseId == "R_3oA6FNzoOfh0xEB"] <- as.double("1") # Abi, kein Studium -> Studium noch nicht abgeschlossen
 data_demograph <-  copy_labels(tmp , data_demograph)
+data_demograph <- data_demograph %>%  select(-school_5_TEXT, -education_6_TEXT)
 ```
+
+```{r topic_no_answer}
+data_topicSelect$interestingTopic[is.na(data_topicSelect$interestingTopic)] <-9
+
+```
+
 

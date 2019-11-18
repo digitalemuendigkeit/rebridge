@@ -1,0 +1,138 @@
+---
+title: "Auswertung"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Einfluss Alter
+## KUT
+```{r KUT_age_effekt}
+# Mittelwert für einen Wert gruppiert anzeigen:
+tapply(data_kut$KUT, data_demograph$age_grp, mean)
+
+# Ausführliche Ausgabe mithilfe von psych:
+psych::describeBy(data_kut$KUT, data_demograph$age_grp)
+
+kut_age_aov <- aov(data_kut$KUT ~ data_demograph$age_grp)
+
+describe.aov(kut_age_aov)
+
+```
+Zwischen den Altersgruppen ist beim KUT kein signifikanter Unterschied beim KUT erkennbar (`r describe.aov(kut_age_aov)`).
+
+## Privatsphäre von RS
+
+```{r}
+# Mittelwert nach Altersgruppe
+psych::describeBy(data_RS_trust$RS_Privacy_Trust, data_demograph$age_grp, mat = TRUE)
+describe.aov(aov(data_RS_trust$RS_Privacy_Trust ~ data_demograph$age_grp))[1]
+```
+
+# Einfluss auf Bewertungen
+
+## Geschlecht
+```{r bewertung_geschlecht}
+# Anlernen
+t.test(data_anlernen$Anlernen_SUM_bew ~ data_demograph$gender) # knapp nicht
+wilcox.test(data_anlernen$Anlernen_ArticleReview_quality ~ data_demograph$gender) # nicht
+
+# UBCF
+t.test(data_UBCF$UBCF_SUM_Artikel ~ data_demograph$gender) # ultra knapp nicht
+wilcox.test(data_UBCF$UBCF_ges_art_bew ~ data_demograph$gender) # nicht
+wilcox.test(data_UBCF$UBCF_RS_bew ~ data_demograph$gender) # knapp nicht
+
+# SVD
+wilcox.test(data_SVD$SVD_SUM_Artikel ~ data_demograph$gender) # nicht
+wilcox.test(data_SVD$SVD_ges_art_bew ~ data_demograph$gender) # nicht
+t.test(data_SVD$SVD_RS_bew ~ data_demograph$gender) # nicht
+```
+
+## Altersgruppe
+```{r bewertung_alters_grp}
+# Anlernen
+summary(aov(data_anlernen$Anlernen_SUM_bew ~ data_demograph$age_grp)) # nicht
+kruskal.test(data_anlernen$Anlernen_ArticleReview_quality, data_demograph$age_grp) # nicht
+
+# UBCF
+summary(aov(data_UBCF$UBCF_SUM_Artikel ~ data_demograph$age_grp)) # nicht
+kruskal.test(data_UBCF$UBCF_ges_art_bew, data_demograph$age_grp) # nicht
+kruskal.test(data_UBCF$UBCF_RS_bew, data_demograph$age_grp) # nicht
+
+# SVD
+kruskal.test(data_SVD$SVD_SUM_Artikel, data_demograph$age_grp) # nicht
+kruskal.test(data_SVD$SVD_ges_art_bew, data_demograph$age_grp) # nicht
+summary(aov(data_SVD$SVD_RS_bew ~ data_demograph$age_grp)) # nicht
+```
+
+## KUT
+```{r bewertung_KUT}
+# Anlernen
+cor.test(data_anlernen$Anlernen_SUM_bew, data_kut$KUT) # < 0.05*
+cor.test(data_anlernen$Anlernen_ArticleReview_quality, data_kut$KUT, method = "spearman")  # nicht
+
+# UBCF
+cor.test(data_UBCF$UBCF_SUM_Artikel, data_kut$KUT) # < 0.05*
+cor.test(data_UBCF$UBCF_ges_art_bew, data_kut$KUT, method = "spearman") # nicht
+cor.test(data_UBCF$UBCF_RS_bew, data_kut$KUT, method = "spearman") # nicht
+
+# SVD
+cor.test(data_SVD$SVD_SUM_Artikel, data_kut$KUT, method = "spearman")  # < 0.05*
+cor.test(data_SVD$SVD_ges_art_bew, data_kut$KUT, method = "spearman") # nicht
+cor.test(data_SVD$SVD_RS_bew, data_kut$KUT) # nicht
+```
+
+## RS Privacy Trust
+```{r bewertung_privacy_Trust}
+# Anlernen
+cor.test(data_anlernen$Anlernen_SUM_bew, data_RS_trust$RS_Privacy_Trust) # nicht
+cor.test(data_anlernen$Anlernen_ArticleReview_quality, data_RS_trust$RS_Privacy_Trust, method = "spearman")  # ultra knapp nicht
+
+# UBCF
+cor.test(data_UBCF$UBCF_SUM_Artikel, data_RS_trust$RS_Privacy_Trust) # < 0.05*
+cor.test(data_UBCF$UBCF_ges_art_bew, data_RS_trust$RS_Privacy_Trust, method = "spearman") # nicht
+cor.test(data_UBCF$UBCF_RS_bew, data_RS_trust$RS_Privacy_Trust, method = "spearman") # nicht
+
+# SVD
+cor.test(data_SVD$SVD_SUM_Artikel, data_RS_trust$RS_Privacy_Trust, method = "spearman")  # nicht
+cor.test(data_SVD$SVD_ArticleReview_quality, data_RS_trust$RS_Privacy_Trust, method = "spearman") # < 0.05*
+cor.test(data_SVD$SVD_RS_bew, data_RS_trust$RS_Privacy_Trust) # < 0.01**
+```
+
+## Themenwahl
+
+```{r bewertung_themenwahl}
+# Anlernen
+summary(aov(data_anlernen$Anlernen_SUM_bew ~ data_topicSelect$interestingTopic)) # nicht
+kruskal.test(data_anlernen$Anlernen_ArticleReview_quality, data_topicSelect$interestingTopic) # nicht
+
+# UBCF
+summary(aov(data_UBCF$UBCF_SUM_Artikel ~ data_topicSelect$interestingTopic)) # nicht
+kruskal.test(data_UBCF$UBCF_ArticleReview_quality, data_topicSelect$interestingTopic) # nicht
+kruskal.test(data_UBCF$UBCF_RS_bew, data_topicSelect$interestingTopic) # nicht
+
+# SVD
+kruskal.test(data_SVD$SVD_SUM_Artikel, data_topicSelect$interestingTopic) # nicht
+kruskal.test(data_SVD$SVD_ArticleReview_quality, data_topicSelect$interestingTopic) # nicht
+summary(aov(data_SVD$SVD_RS_bew ~ data_topicSelect$interestingTopic)) # nicht
+```
+
+## Covarianz KUT & Privacy
+```{r bewertung_KUT_AND_privacy_Trust}
+# Da sich die Ergebnisse zwischen den nicht-parametrischen und parametrischen Tests nicht stark unterscheiden, werden im Folgenden zur Vereinfachung auch parametrische Tests angewendet, wenn die Variablen nicht normalverteilt sind.
+
+# Anlernen
+summary(aov(data_anlernen$Anlernen_SUM_bew ~ data_kut$KUT + data_RS_trust$RS_Privacy_Trust)) # nur KUT *
+summary(aov(data_anlernen$Anlernen_ArticleReview_quality ~ data_kut$KUT + data_RS_trust$RS_Privacy_Trust)) # nicht
+# UBCF
+summary(aov(data_UBCF$UBCF_SUM_Artikel ~ data_kut$KUT + data_RS_trust$RS_Privacy_Trust)) # nur KUT *
+summary(aov(data_UBCF$UBCF_ArticleReview_quality ~ data_kut$KUT + data_RS_trust$RS_Privacy_Trust)) # nicht
+summary(aov(data_UBCF$UBCF_RS_bew ~ data_kut$KUT + data_RS_trust$RS_Privacy_Trust)) # nur Trust *
+
+# SVD
+summary(aov(data_SVD$SVD_SUM_Artikel ~ data_kut$KUT + data_RS_trust$RS_Privacy_Trust)) # nur KUT *
+summary(aov(data_SVD$SVD_ges_art_bew ~ data_kut$KUT + data_RS_trust$RS_Privacy_Trust)) # nur Trust *
+summary(aov(data_SVD$SVD_RS_bew ~ data_kut$KUT + data_RS_trust$RS_Privacy_Trust)) # nur Trust ***
+```

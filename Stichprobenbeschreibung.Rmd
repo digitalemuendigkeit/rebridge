@@ -54,28 +54,13 @@ Die Teilnehmer der Umfrage waren zu:
 * `r divers/user*100`0 % divers
 
 ## Alter
-```{r age_group}
-# Alter der Probanden gruppiert #
-#   <= 21 Jahre → Gruppe 1      #
-# 22 - 35 Jahre → Gruppe 2      #
-# 36 - 50 Jahre → Gruppe 3      #
-# 50 - 64 Jahre → Gruppe 5      # 
-#    > 65 Jahre → Gruppe 6      #
-
-data_demograph <- data_demograph %>% mutate(age_grp = case_when(age < 22 ~ 1, 
-                                                                age  < 35 ~ 2,
-                                                                age  < 50 ~ 3,
-                                                                age  < 65 ~ 4,
-                                                                age >= 65 ~ 5))
-```
-
 ```{r age_graph}
 
 # Grafische Darstellung
 data_demograph  %>% ggplot() + 
                     aes(x = as.numeric(age), 
                         fill = factor(gender)) + 
-                    geom_histogram(position = "stack", binwidth = 1) + 
+                    geom_histogram(position = "stack", binwidth = 3) + 
                     xlab("Alter") + 
                     ylab("Anzahl") + 
                     scale_fill_discrete(name="Geschlecht",
@@ -235,7 +220,6 @@ Zwischen den Geschlechtern besteht nur bei der Nutzung von regionalen ein signif
 
 ```{r topic_graph}
 # Finde alle NA und ersetzte NA durch 9 
-data_topicSelect$interestingTopic[is.na(data_topicSelect$interestingTopic)] <-9
 data_topicSelect  %>% ggplot(aes(x = interestingTopic,
                                y = ..prop..,
                                fill = factor(data_demograph$gender))) + 
@@ -259,14 +243,14 @@ data_topicSelect  %>% ggplot(aes(x = interestingTopic,
 
 Von den vorgegebenen Themenbereichen haben sich:
 
-* `r table(data_topicSelect$interestingTopic)[1]/user*100` % für A entschieden
-* `r table(data_topicSelect$interestingTopic)[2]/user*100` % für B entschieden
-* `r table(data_topicSelect$interestingTopic)[3]/user*100` % für C entschieden
-* `r table(data_topicSelect$interestingTopic)[4]/user*100` % für D entschieden
-* `r table(data_topicSelect$interestingTopic)[5]/user*100` % für E entschieden
-* `r table(data_topicSelect$interestingTopic)[6]/user*100` % für F entschieden
-* `r table(data_topicSelect$interestingTopic)[7]/user*100` % für G entschieden
-* `r table(data_topicSelect$interestingTopic)[8]/user*100` % für H entschieden
+* `r table(data_topicSelect$interestingTopic)[1]/user*100` % für Politik entschieden
+* `r table(data_topicSelect$interestingTopic)[2]/user*100` % für Games entschieden
+* `r table(data_topicSelect$interestingTopic)[3]/user*100` % für Wirtschaft entschieden
+* `r table(data_topicSelect$interestingTopic)[4]/user*100` % für Kultur entschieden
+* `r table(data_topicSelect$interestingTopic)[5]/user*100` % für Lifestyle entschieden
+* `r table(data_topicSelect$interestingTopic)[6]/user*100` % für Computer & Technik entschieden
+* `r table(data_topicSelect$interestingTopic)[7]/user*100` % für Netzpolitik entschieden
+* `r table(data_topicSelect$interestingTopic)[8]/user*100` % für Wissenschaft entschieden
 * `r table(data_topicSelect$interestingTopic)[9]/user*100` % keine Angaben gemacht
 
 Wie aus der Grafik erkennbar ist, gibt es bei der Themenwahl einen signifikanten Unterschied zwischen den Geschlechtern (`r describe.chi(table(data_topicSelect$interestingTopic, data_demograph$gender))`).
@@ -275,13 +259,13 @@ Wie aus der Grafik erkennbar ist, gibt es bei der Themenwahl einen signifikanten
 
 ```{r data_publishing}
 mrg_data_pub_gen <- data_publishing %>% select(-ResponseId)
-mrg_data_pub_gen$RS_dataPublishing_1 <- as.numeric(mrg_data_pub_gen$RS_dataPublishing_1)
-mrg_data_pub_gen$RS_dataPublishing_2 <- as.numeric(mrg_data_pub_gen$RS_dataPublishing_2)
-mrg_data_pub_gen$RS_dataPublishing_3 <- as.numeric(mrg_data_pub_gen$RS_dataPublishing_3)
-mrg_data_pub_gen$RS_dataPublishing_4 <- as.numeric(mrg_data_pub_gen$RS_dataPublishing_4)
-mrg_data_pub_gen$RS_dataPublishing_5 <- as.numeric(mrg_data_pub_gen$RS_dataPublishing_5)
-mrg_data_pub_gen$RS_dataPublishing_6 <- as.numeric(mrg_data_pub_gen$RS_dataPublishing_6)
-mrg_data_pub_gen$RS_dataPublishing_7 <- as.numeric(mrg_data_pub_gen$RS_dataPublishing_7)
+mrg_data_pub_gen$RS_thema <- as.numeric(mrg_data_pub_gen$RS_thema)
+mrg_data_pub_gen$RS_gelesene_artikel <- as.numeric(mrg_data_pub_gen$RS_gelesene_artikel)
+mrg_data_pub_gen$RS_hobby <- as.numeric(mrg_data_pub_gen$RS_hobby)
+mrg_data_pub_gen$RS_demograph <- as.numeric(mrg_data_pub_gen$RS_demograph)
+mrg_data_pub_gen$RS_standort <- as.numeric(mrg_data_pub_gen$RS_standort)
+mrg_data_pub_gen$RS_politik <- as.numeric(mrg_data_pub_gen$RS_politik)
+mrg_data_pub_gen$RS_religion <- as.numeric(mrg_data_pub_gen$RS_religion)
 
 mrg_data_pub_gen <- mrg_data_pub_gen %>% pivot_longer(cols= c(starts_with("RS")), names_to = "Datentyp", values_to = "Bereitschaft")
 
@@ -299,18 +283,18 @@ ggplot(mrg_data_pub_gen,
 
 Bereitschaft zur Datenfreigabe für das Verbessern von Empfehlungssystemen
 
-* Bevorzugten Themengebiete: uneindeutig (`r describe.mean.sd(data_publishing$RS_dataPublishing_1)`)
-* Bewertungen über gerade gelesene Artikel: schwach abgeneigt (`r describe.mean.sd(data_publishing$RS_dataPublishing_2)`)
-* Persönliche Interessen (Hobbys): sehr schwach abgeneigt (`r describe.mean.sd(data_publishing$RS_dataPublishing_3)`)
-* Persönliche Angaben (Geschlecht, Alter): schwach abgeneigt (`r describe.mean.sd(data_publishing$RS_dataPublishing_4)`)
-* Aktueller Standort: abgeneigt (`r describe.mean.sd(data_publishing$RS_dataPublishing_5)`)
-* Politische Einstellung: abgeneigt (`r describe.mean.sd(data_publishing$RS_dataPublishing_6)`)
-* Religionszugehörigkeit: abgeneigt (`r describe.mean.sd(data_publishing$RS_dataPublishing_7)`)
+* Bevorzugten Themengebiete: schwach zugeneigt (`r describe.mean.sd(data_publishing$RS_thema)`)
+* Bewertungen über gerade gelesene Artikel: sehr schwach abgeneigt (`r describe.mean.sd(data_publishing$RS_gelesene_artikel)`)
+* Persönliche Interessen (Hobbys): sehr schwach abgeneigt (`r describe.mean.sd(data_publishing$RS_hobby)`)
+* Persönliche Angaben (Geschlecht, Alter): schwach abgeneigt (`r describe.mean.sd(data_publishing$RS_demograph)`)
+* Aktueller Standort: abgeneigt (`r describe.mean.sd(data_publishing$RS_standort)`)
+* Politische Einstellung: abgeneigt (`r describe.mean.sd(data_publishing$RS_politik)`)
+* Religionszugehörigkeit: abgeneigt (`r describe.mean.sd(data_publishing$RS_religion)`)
 
 ## Einstellung Privatsphäre von RS
 
 ```{r RS_privacy}
-ggplot(data_priv,aes(x=data_cleaned$gender, y=RS_Privacy_Trust, group=as.numeric(data_cleaned$gender)))+
+ggplot(data_RS_trust,aes(x=data_cleaned$gender, y=RS_Privacy_Trust, group=as.numeric(data_cleaned$gender)))+
       geom_violin(alpha = 0.6, fill = "lightblue") +
       geom_boxplot(alpha = 0.7)+
       labs(x ="Geschlecht", y = "Einstellung zur Privatsphäre eines Empfehlungssystems") +
@@ -319,13 +303,11 @@ ggplot(data_priv,aes(x=data_cleaned$gender, y=RS_Privacy_Trust, group=as.numeric
       coord_cartesian(ylim = c(1,6)) 
 
 # Wie berichte ich diesen Test?
-wilcox.test(data_priv$RS_Privacy_Trust ~ data_demograph$gender)
-t.test(data_priv$RS_Privacy_Trust ~ data_demograph$gender)
-
+wilcox.test(data_RS_trust$RS_Privacy_Trust ~ data_demograph$gender)
+t.test(data_RS_trust$RS_Privacy_Trust ~ data_demograph$gender)
 ```
 
-Die Befragten machen sich leichte Sorgen um ihre Privatsphäre beim Verwenden von Empfehlungssystemen (`r describe.mean.sd(data_priv$RS_Privacy_Trust)
-`). Insgesamt machen sich die Frauen etwas mehr Sorgen um ihre Privatsphäre (`r describe.mean.sd(m= tapply(data_priv$RS_Privacy_Trust, data_demograph$gender, mean)[2], sd= tapply(data_priv$RS_Privacy_Trust, data_demograph$gender, sd)[2])`) als die männlichen Befragten (`r describe.mean.sd(m= tapply(data_priv$RS_Privacy_Trust, data_demograph$gender, mean)[1], sd= tapply(data_priv$RS_Privacy_Trust, data_demograph$gender, sd)[1])`). Dieser Unterschied ist aber nicht signifikant TEST ERGÄNZEN.
+Die Befragten machen sich leichte Sorgen um ihre Privatsphäre beim Verwenden von Empfehlungssystemen (`r describe.mean.sd(data_RS_trust$RS_Privacy_Trust) `). Insgesamt machen sich die Frauen etwas mehr Sorgen um ihre Privatsphäre (`r describe.mean.sd(m= tapply(data_RS_trust$RS_Privacy_Trust, data_demograph$gender, mean)[2], sd= tapply(data_RS_trust$RS_Privacy_Trust, data_demograph$gender, sd)[2])`) als die männlichen Befragten (`r describe.mean.sd(m= tapply(data_RS_trust$RS_Privacy_Trust, data_demograph$gender, mean)[1], sd= tapply(data_RS_trust$RS_Privacy_Trust, data_demograph$gender, sd)[1])`). Dieser Unterschied ist signifikant (`r describe.ttest(t.test(data_RS_trust$RS_Privacy_Trust ~ data_demograph$gender))`).
 
 ## Einschätzung Qualität
 ```{r quality_expection}
@@ -381,35 +363,43 @@ Gerade einmal `r data_know_austria %>% filter(knowledge_austria > 2) %>% count()
 ## Anlernen
 
 ```{r Anlernen_describe}
-#describe.mean.sd(data_anlernen$Anlernen_SUM_bew)
-#describe.mean.sd(data_anlernen$anlernen_ges_bew)
-#describe.r(cor.test(data_anlernen$Anlernen_SUM_bew,data_anlernen$anlernen_ges_bew))
+describe.mean.sd(data_anlernen$Anlernen_ArticleReview_diversity)
+describe.mean.sd(data_anlernen$Anlernen_ArticleReview_novelty)
+describe.mean.sd(data_anlernen$Anlernen_ArticleReview_serendipity)
+describe.mean.sd(data_anlernen$Anlernen_ArticleReview_relevance)
+describe.mean.sd(data_anlernen$Anlernen_ArticleReview_quality)
+describe.mean.sd(data_anlernen$Anlernen_SUM_bew)
+
 data_anlernen %>% select(-ResponseId) %>%  psych::pairs.panels(hist.col="skyblue")
 
 ```
-Die Befragten haben die präsentierten Empfehlungen während des Anlernes durchschnittlich bewertet (`r describe.mean.sd(data_anlernen$Anlernen_SUM_bew)`). Auch bei der anschließenden übergreifenden Bewertung des Anlernprozess, wurde dieser durchschnittlich bewertet (`r describe.mean.sd(data_anlernen$anlernen_ges_bew)`). Bei der Analyse, wie weit diese beiden Werte miteinander korrelieren, kam heraus, dass sie eine signifikant moderate poitive Beziehung miteinander haben (`r describe.r(cor.test(data_anlernen$Anlernen_SUM_bew,data_anlernen$anlernen_ges_bew))`).
+Die Befragten haben die präsentierten Empfehlungen während des Anlernes durchschnittlich bewertet (`r describe.mean.sd(data_anlernen$Anlernen_SUM_bew)`). Auch bei der anschließenden übergreifenden Bewertung des Anlernprozess, wurde dieser durchschnittlich bewertet (`r describe.mean.sd(data_anlernen$Anlernen_ArticleReview_quality)`).
 
 ## UBCF
 ```{r UBCF_describe}
-#describe.mean.sd(data_UBCF$UBCF_SUM_Artikel)
-#describe.mean.sd(data_UBCF$UBCF_ges_art_bew)
-#describe.mean.sd(data_UBCF$UBCF_RS_bew)
+describe.mean.sd(data_UBCF$UBCF_ArticleReview_diversity)
+describe.mean.sd(data_UBCF$UBCF_ArticleReview_novelty)
+describe.mean.sd(data_UBCF$UBCF_ArticleReview_serendipity)
+describe.mean.sd(data_UBCF$UBCF_ArticleReview_quality)
+describe.mean.sd(data_UBCF$UBCF_RS_bew)
 
 data_UBCF %>% select(-ResponseId) %>%  psych::pairs.panels(hist.col="skyblue")
 data_UBCF %>% select(-ResponseId) %>%  psych::corr.test()
 ```
 
-Die Befragten haben die empfohlenen Artikel des UBCF-Empfehlungssystem im Durchschnitt mittelmäßig bewertet (`r describe.mean.sd(data_UBCF$UBCF_SUM_Artikel)`). Auch die übergreifende Bewertung der Artikel (`r describe.mean.sd(data_UBCF$UBCF_ges_art_bew)`) zeigte ein ähnliches Bild. Die Bewertung des Empfehlungssystems an sich (`r describe.mean.sd(data_UBCF$UBCF_RS_bew)`) fiel hingegen leicht negativ aus.
+Die Befragten haben die empfohlenen Artikel des UBCF-Empfehlungssystem im Durchschnitt mittelmäßig bewertet (`r describe.mean.sd(data_UBCF$UBCF_SUM_Artikel)`). Auch die übergreifende Bewertung der Artikel (`r describe.mean.sd(data_UBCF$UBCF_ArticleReview_quality)`) zeigte ein ähnliches Bild. Die Bewertung des Empfehlungssystems an sich (`r describe.mean.sd(data_UBCF$UBCF_RS_bew)`) fiel hingegen leicht negativ aus.
 
 ## SVD
 ```{r SVD_describe}
-describe.mean.sd(data_SVD$SVD_SUM_Artikel)
-describe.mean.sd(data_SVD$SVD_ges_art_bew)
+describe.mean.sd(data_SVD$SVD_ArticleReview_diversity)
+describe.mean.sd(data_SVD$SVD_ArticleReview_novelty)
+describe.mean.sd(data_SVD$SVD_ArticleReview_serendipity)
+describe.mean.sd(data_SVD$SVD_ArticleReview_relevance)
+describe.mean.sd(data_SVD$SVD_ArticleReview_quality)
 describe.mean.sd(data_SVD$SVD_RS_bew)
-#describe.r(cor.test(data_UBCF$UBCF_SUM_Artikel,data_UBCF$UBCF_ges_art_bew,data_UBCF$UBCF_RS_bew))
 
 data_SVD %>% select(-ResponseId) %>%  psych::pairs.panels(hist.col="skyblue")
 data_SVD %>% select(-ResponseId) %>%  psych::corr.test()
 ```
 
-Die Befragten haben die empfohlenen Artikel des SVD-Empfehlungssystem im Durchschnitt leicht negativ bewertet (`r describe.mean.sd(data_UBCF$UBCF_SUM_Artikel)`). Die übergreifende Bewertung der Artikel (`r describe.mean.sd(data_UBCF$UBCF_ges_art_bew)`) fiel etwas besser aus. Die Bewertung des Empfehlungssystems an sich (`r describe.mean.sd(data_UBCF$UBCF_RS_bew)`) fiel hingegen wieder leicht negativ aus.
+Die Befragten haben die empfohlenen Artikel des SVD-Empfehlungssystem im Durchschnitt leicht negativ bewertet (`r describe.mean.sd(data_UBCF$UBCF_SUM_Artikel)`). Die übergreifende Bewertung der Artikel (`r describe.mean.sd(data_UBCF$SVD_ArticleReview_quality)`) fiel etwas besser aus. Die Bewertung des Empfehlungssystems an sich (`r describe.mean.sd(data_UBCF$UBCF_RS_bew)`) fiel hingegen wieder leicht negativ aus.
