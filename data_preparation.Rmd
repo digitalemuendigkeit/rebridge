@@ -60,7 +60,7 @@ data_demograph <- data_demograph %>% mutate(age_grp = case_when(age < 22 ~ 1,
                                                                 age >= 65 ~ 5))
 ```
 
-```{r manual_school_cleanup}
+```{r manual_school_cleanup , include=FALSE}
 data_demograph %>% filter(school == 5)
 data_demograph %>% filter(education == 6)
 
@@ -84,5 +84,15 @@ data_demograph <- data_demograph %>%  select(-school_5_TEXT, -education_6_TEXT)
 data_topicSelect$interestingTopic[is.na(data_topicSelect$interestingTopic)] <-9
 
 ```
-
-
+ 
+```{r loop_zero_rating}
+data_cleaned$loop1.1_1<-recode(data_cleaned$loop1.1_1, `0` = 1)
+data_cleaned$loop1.2_1<-recode(data_cleaned$loop1.2_1, `0` = 1)
+data_cleaned$loop1.3_1<-recode(data_cleaned$loop1.3_1, `0` = 1)
+data_cleaned$loop1.4_1<-recode(data_cleaned$loop1.4_1, `0` = 1)
+data_cleaned$loop2.1_1<-recode(data_cleaned$loop2.1_1, `0` = 1)
+data_cleaned$loop2.2_1<-recode(data_cleaned$loop2.2_1, `0` = 1)
+data_cleaned$loop2.3_1<-recode(data_cleaned$loop2.3_1, `0` = 1)
+data_cleaned$loop2.4_1<-recode(data_cleaned$loop2.4_1, `0` = 1)
+```
+ 
