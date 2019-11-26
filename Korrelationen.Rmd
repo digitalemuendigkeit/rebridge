@@ -97,7 +97,7 @@ cor_SVD_einsch  %>%  psych::corr.test()
 
 ## Predictions UBCF
 
-```{r cor_predictions}
+```{r cor_predictions_UBCF}
 
 cor_pred_UBCF <- data_demograph %>%  
                         select(ResponseId,age) %>%
@@ -123,7 +123,7 @@ ggstatsplot::ggcorrmat(cor_pred_UBCF,
 ```
 ## Predictions SVD
 
-```{r cor_predictions}
+```{r cor_predictions_SVD}
 
 cor_pred_SVD <- data_demograph %>%  
                         select(ResponseId,age) %>%
