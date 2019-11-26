@@ -22,6 +22,12 @@ library(haven)
 library(apastats)
 ```
 
+## Korrelation Persönlichkeiten
+```{r cor_persoenlichkeit}
+data_bigFive %>% select(-ResponseId) %>% psych::pairs.panels(hist.col="skyblue", lm = T)
+```
+
+
 ## Einschätzung Empfehlungssystem
 ```{r cor_RS_einsch}
 cor_RS_einsch <- data_demograph %>%  
@@ -31,7 +37,7 @@ cor_RS_einsch <- data_demograph %>%
                         inner_join(., data_RS_einschaetzung, by="ResponseId") %>% 
                         select(-ResponseId)
   
-cor_RS_einsch %>% psych::pairs.panels(hist.col="skyblue")
+cor_RS_einsch %>% psych::pairs.panels(hist.col="skyblue", lm = T)
 cor_RS_einsch %>% psych::corr.test()
 ```
 
@@ -44,7 +50,7 @@ cor_RS_anlernen <- data_demograph %>%
                         inner_join(., data_anlernen, by="ResponseId") %>% 
                         select(-ResponseId)
   
-cor_RS_anlernen %>%  psych::pairs.panels(hist.col="skyblue")
+cor_RS_anlernen %>%  psych::pairs.panels(hist.col="skyblue", lm = T)
 cor_RS_anlernen %>%  psych::corr.test()
 ```
 
@@ -64,7 +70,7 @@ cor_UBCF_einsch <- data_RS_einschaetzung %>%
                      inner_join(., data_UBCF, by="ResponseId") %>% 
                      select(-ResponseId)
 
-cor_UBCF_einsch  %>%  psych::pairs.panels(hist.col="skyblue")
+cor_UBCF_einsch  %>%  psych::pairs.panels(hist.col="skyblue", lm = T)
 cor_UBCF_einsch  %>%  psych::corr.test()
 
 ```
@@ -85,6 +91,61 @@ cor_SVD_einsch <- data_RS_einschaetzung %>%
                      inner_join(., data_SVD, by="ResponseId") %>% 
                      select(-ResponseId)
 
-cor_SVD_einsch  %>%  psych::pairs.panels(hist.col="skyblue")
+cor_SVD_einsch  %>%  psych::pairs.panels(hist.col="skyblue", lm = T)
 cor_SVD_einsch  %>%  psych::corr.test()
 ```
+
+## Predictions UBCF
+
+```{r cor_predictions}
+
+cor_pred_UBCF <- data_demograph %>%  
+                        select(ResponseId,age) %>%
+                        inner_join(., data_kut, by="ResponseId") %>% 
+                        inner_join(., data_RS_trust, by="ResponseId") %>% 
+                        inner_join(., data_bigFive, by="ResponseId") %>% 
+                        inner_join(., data_article_UBCF, by="ResponseId") 
+
+cor_pred_UBCF %>%  select(age, cor_user_UBCF_pre)  %>%  psych::pairs.panels(hist.col="skyblue", lm=TRUE)
+cor_pred_UBCF %>%  select(age, cor_user_UBCF_post)  %>%  psych::pairs.panels(hist.col="skyblue", lm=TRUE)
+cor_pred_UBCF %>%  select(age, user_pre_abstand_abs_UBCF)  %>%  psych::pairs.panels(hist.col="skyblue", lm=TRUE)
+cor_pred_UBCF %>%  select(age, user_post_abstand_abs_UBCF)  %>%  psych::pairs.panels(hist.col="skyblue", lm=TRUE)
+
+ggstatsplot::ggcorrmat(cor_pred_UBCF, 
+                       cor.vars = c(age,KUT,RS_Privacy_Trust,cor_user_UBCF_pre, cor_user_UBCF_post,user_pre_abstand_abs_UBCF,user_post_abstand_abs_UBCF),
+                       cor.vars.names = c("Alter","KUT","Trust","Korrelation Pretest", "Korrelation Posttest","Abstand Pretest","Abstand Posttest"),
+                       hc.order = T)
+
+ggstatsplot::ggcorrmat(cor_pred_UBCF, 
+                       cor.vars = c(neuro,vertraeglich,extraversion,gewissenhaft,offenheit,cor_user_UBCF_pre, cor_user_UBCF_post,user_pre_abstand_abs_UBCF,user_post_abstand_abs_UBCF),
+                       cor.vars.names = c("Neurotisch","Verträglichkeit","Extraversion","Gewissenhaftigkeit","Offenheit","Korrelation Pretest", "Korrelation Posttest","Abstand Pretest","Abstand Posttest"),
+                       hc.order = T)
+```
+## Predictions SVD
+
+```{r cor_predictions}
+
+cor_pred_SVD <- data_demograph %>%  
+                        select(ResponseId,age) %>%
+                        inner_join(., data_kut, by="ResponseId") %>% 
+                        inner_join(., data_RS_trust, by="ResponseId") %>% 
+                        inner_join(., data_bigFive, by="ResponseId") %>% 
+                        inner_join(., data_article_SVD, by="ResponseId") 
+
+cor_pred_SVD %>%  select(age, cor_user_SVD_pre)  %>%  psych::pairs.panels(hist.col="skyblue", lm=TRUE)
+cor_pred_SVD %>%  select(age, cor_user_SVD_post)  %>%  psych::pairs.panels(hist.col="skyblue", lm=TRUE)
+cor_pred_SVD %>%  select(age, user_pre_abstand_abs_SVD)  %>%  psych::pairs.panels(hist.col="skyblue", lm=TRUE)
+cor_pred_SVD %>%  select(age, user_post_abstand_abs_SVD)  %>%  psych::pairs.panels(hist.col="skyblue", lm=TRUE)
+
+ggstatsplot::ggcorrmat(cor_pred_SVD, 
+                       cor.vars = c(age,KUT,RS_Privacy_Trust,cor_user_SVD_pre, cor_user_SVD_post,user_pre_abstand_abs_SVD,user_post_abstand_abs_SVD),
+                       cor.vars.names = c("Alter","KUT","Trust","Korrelation Pretest", "Korrelation Posttest","Abstand Pretest","Abstand Posttest"),
+                       hc.order = T)
+
+ggstatsplot::ggcorrmat(cor_pred_SVD, 
+                       cor.vars = c(neuro,vertraeglich,extraversion,gewissenhaft,offenheit,cor_user_SVD_pre, cor_user_SVD_post,user_pre_abstand_abs_SVD,user_post_abstand_abs_SVD),
+                       cor.vars.names = c("Neurotisch","Verträglichkeit","Extraversion","Gewissenhaftigkeit","Offenheit","Korrelation Pretest", "Korrelation Posttest","Abstand Pretest","Abstand Posttest"),
+                       hc.order = T)
+
+```
+
