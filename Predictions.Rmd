@@ -8,93 +8,187 @@ library(recommenderlab)
 library(dplyr)
 library(readr)
 library(feather)
+library(tidyverse)
 ```
 
 ```{r prediction_prepare}
 m <- read_feather("./ratings_comments.feather")  %>% as.data.frame() %>% as("realRatingMatrix")
+
+# PostTrained
 rec_UBCF <- Recommender(m, method = "UBCF")
 rec_SVD <- Recommender(m, method = "SVD")
 
-data_articleIDs <- data_cleaned  %>% select(ResponseId, starts_with("ID_A"), starts_with("ID_B"), starts_with("loop")) %>%  labelled::remove_labels() %>% labelled::remove_attributes(. , "display_width")
+# PreTrained
+# rec_UBCF <- Recommender(m[155:5560], method = "UBCF")
+# rec_SVD <- Recommender(m[155:5560], method = "SVD")
+
+data_article_UBCF <- data_cleaned  %>% select(ResponseId, starts_with("ID_A"), starts_with("loop1")) %>%  labelled::remove_labels() %>% labelled::remove_attributes(. , "display_width")
+
+data_article_SVD <- data_cleaned  %>% select(ResponseId, starts_with("ID_B"), starts_with("loop2")) %>%  labelled::remove_labels() %>% labelled::remove_attributes(. , "display_width")
+
 ```
 
 ```{r prediction_UBCF}
-# TODO: Nutzerbewertung entfernen?
-pred_UBCF <- recommenderlab::predict(rec_UBCF, m, data = m, type="ratingMatrix")
+pred_UBCF <- recommenderlab::predict(rec_UBCF, m[1:154], type="ratingMatrix")
 
 tmp <- (as(pred_UBCF, "matrix"))
 pred_UBCF_matrix <- as.data.frame(tmp)
+pred_UBCF_matrix <- rownames_to_column(pred_UBCF_matrix, var = "ResponseId")
 
+## for-Schleife Berechnen der Prediction
+data_UBCF_prediction <- data.frame(ResponseId=character(), pred_A1=numeric(), pred_A2=numeric(), pred_A3=numeric(), pred_A4=numeric())
 
-## for-Schleife zur Artikel ID Abfrage
-
-pred_A1 <- vector()
-pred_A2 <- vector()
-pred_A3 <- vector()
-pred_A4 <- vector()
-
-for (i in 0:length(data_articleIDs$ResponseId)){
-  user <- data_articleIDs[i,]
+for (i in 1:length(data_article_UBCF$ResponseId)){
+  user <- data_article_UBCF[i,]
   user_ID <- paste("\"",user$ResponseId,"\"", sep = "")
-  row_num <- which(row.names(pred_UBCF_matrix) %in% user_ID)
-  
-  pred_A1 <- c(pred_A1, pred_UBCF_matrix[row_num,] %>% select(user$ID_A1) %>% as.numeric())
-  pred_A2 <- c(pred_A2, pred_UBCF_matrix[row_num,] %>% select(user$ID_A2) %>% as.numeric())
-  pred_A3 <- c(pred_A3, pred_UBCF_matrix[row_num,] %>% select(user$ID_A3) %>% as.numeric())
-  pred_A4 <- c(pred_A4, pred_UBCF_matrix[row_num,] %>% select(user$ID_A4) %>% as.numeric())
+  tmp_pred_A1 = pred_UBCF_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_A1) %>% as.numeric()
+  tmp_pred_A2 = pred_UBCF_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_A2) %>% as.numeric()
+  tmp_pred_A3 = pred_UBCF_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_A3) %>% as.numeric()
+  tmp_pred_A4 = pred_UBCF_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_A4) %>% as.numeric()
+  data_UBCF_prediction <- add_row(data_UBCF_prediction, 
+                                  ResponseId = user$ResponseId, 
+                                  pred_A1 = tmp_pred_A1, 
+                                  pred_A2 = tmp_pred_A2, 
+                                  pred_A3 = tmp_pred_A3,
+                                  pred_A4 = tmp_pred_A4)
 }  
 
-data_articleIDs <- tibble::add_column(data_articleIDs, pred_A1)
-data_articleIDs <- tibble::add_column(data_articleIDs, pred_A2)
-data_articleIDs <- tibble::add_column(data_articleIDs, pred_A3)
-data_articleIDs <- tibble::add_column(data_articleIDs, pred_A4)
+data_article_UBCF <- inner_join(data_article_UBCF, data_UBCF_prediction, by = "ResponseId")
 
-data_articleIDs %>% select(loop1.1_1, pred_A1) %>% psych::pairs.panels(hist.col="skyblue")
-data_articleIDs %>% select(loop1.2_1, pred_A2) %>% psych::pairs.panels(hist.col="skyblue")
-data_articleIDs %>% select(loop1.3_1, pred_A3) %>% psych::pairs.panels(hist.col="skyblue")
-data_articleIDs %>% select(loop1.4_1, pred_A4) %>% psych::pairs.panels(hist.col="skyblue")
+# Accuracy UBCF
+data_article_UBCF <- mutate(data_article_UBCF, pred_A1_round = round(pred_A1, digits = 0))
+data_article_UBCF <- mutate(data_article_UBCF, pred_A2_round = round(pred_A2, digits = 0))
+data_article_UBCF <- mutate(data_article_UBCF, pred_A3_round = round(pred_A3, digits = 0))
+data_article_UBCF <- mutate(data_article_UBCF, pred_A4_round = round(pred_A4, digits = 0))
 
+accuracy_UBCF<- tibble(A1 = as.numeric(0), A2 = as.numeric(0), A3 = as.numeric(0), A4 = as.numeric(0))
+
+for (i in 1:length(data_article_UBCF$ResponseId)){
+  user <- data_article_UBCF[i,]
+  accuracy_UBCF <- tibble(A1 = accuracy_UBCF$A1 + sum(user$loop1.1_1 == user$pred_A1_round), 
+                          A2 = accuracy_UBCF$A2 + sum(user$loop1.2_1 == user$pred_A2_round), 
+                          A3 = accuracy_UBCF$A3 + sum(user$loop1.3_1 == user$pred_A3_round),
+                          A4 = accuracy_UBCF$A4 + sum(user$loop1.4_1 == user$pred_A4_round))
+}
+
+accuracy_UBCF <- accuracy_UBCF %>%  pivot_longer(cols= c(A1, A2, A3, A4), names_to = "Artikel", values_to = "Accuracy")
+accuracy_UBCF <- mutate(accuracy_UBCF, Accuracy_rel = Accuracy/length(data_article_UBCF$ResponseId))
+
+describe.mean.sd(accuracy_UBCF$Accuracy_rel)
+
+# Correllation of UBCF Prediction
+data_article_UBCF %>% select(loop1.1_1, pred_A1) %>% psych::pairs.panels(hist.col="skyblue")
+data_article_UBCF %>% select(loop1.2_1, pred_A2) %>% psych::pairs.panels(hist.col="skyblue")
+data_article_UBCF %>% select(loop1.3_1, pred_A3) %>% psych::pairs.panels(hist.col="skyblue")
+data_article_UBCF %>% select(loop1.4_1, pred_A4) %>% psych::pairs.panels(hist.col="skyblue")
+
+# Correlation per User  
+mrg_UBCFRating_predictions <- data_article_UBCF %>% group_by(ResponseId) %>% 
+                            gather(key = "Artikel", value ="User_Bewertung", loop1.1_1, loop1.2_1, loop1.3_1, loop1.4_1) %>% 
+                            gather(key = "Prediction", value = "RS_Prediction", pred_A1, pred_A2, pred_A3, pred_A4) %>% 
+                            mutate(Artikel = str_remove(Artikel, "loop1.")) %>% 
+                            mutate(Artikel = str_remove(Artikel, "_1")) %>% 
+                            mutate(Prediction = str_remove(Prediction, "pred_A")) %>% 
+                            filter (Artikel == Prediction) %>% 
+                            select(ResponseId, User_Bewertung, RS_Prediction)
+  
+cor_UBCFRating_predictions <- mrg_UBCFRating_predictions %>%           
+  group_by(ResponseId) %>%
+  mutate(cor_user_UBCF = cor(User_Bewertung, RS_Prediction)) %>%
+  summarise(cor_user_UBCF_A = mean(cor_user_UBCF))
+
+data_article_UBCF <- inner_join(data_article_UBCF, cor_UBCFRating_predictions, by="ResponseId") 
+
+# Distance per User
+dist_UBCFRating_predictions <- mrg_UBCFRating_predictions %>% 
+  group_by(ResponseId) %>% 
+  mutate(Abstand = abs(RS_Prediction - User_Bewertung)) %>% 
+  summarise(user_pred_abstand_UBCF = mean(Abstand))
+
+data_article_UBCF <- inner_join(data_article_UBCF, dist_UBCFRating_predictions, by="ResponseId") 
 ```
 
 ```{r prediction_SVD}
-# TODO: Nutzerbewertung entfernen?
-pred_SVD <- recommenderlab::predict(rec_SVD, m, data = m, type="ratingMatrix")
+pred_SVD <- recommenderlab::predict(rec_SVD, m[1:154], data = m, type="ratingMatrix")
 
 tmp <- (as(pred_SVD, "matrix"))
 pred_SVD_matrix <- as.data.frame(tmp)
+pred_SVD_matrix <- rownames_to_column(pred_SVD_matrix, var = "ResponseId")
 
+## for-Schleife Berechnen der Prediction
+data_SVD_prediction <- data.frame(ResponseId=character(), pred_B1=numeric(), pred_B2=numeric(), pred_B3=numeric(), pred_B4=numeric())
 
-## for-Schleife zur Artikel ID Abfrage
-
-pred_B1 <- vector()
-pred_B2 <- vector()
-pred_B3 <- vector()
-pred_B4 <- vector()
-
-for (i in 1:length(data_articleIDs$ResponseId)){
-  user <- data_articleIDs[i,]
+for (i in 1:length(data_article_SVD$ResponseId)){
+  user <- data_article_SVD[i,]
   user_ID <- paste("\"",user$ResponseId,"\"", sep = "")
-  row_num <- which(row.names(pred_SVD_matrix) %in% user_ID)
-  
-  pred_B1 <- c(pred_B1, pred_SVD_matrix[row_num,] %>% select(user$ID_B1) %>% as.numeric())
-  pred_B2 <- c(pred_B2, pred_SVD_matrix[row_num,] %>% select(user$ID_B2) %>% as.numeric())
-  pred_B3 <- c(pred_B3, pred_SVD_matrix[row_num,] %>% select(user$ID_B3) %>% as.numeric())
-  pred_B4 <- c(pred_B4, pred_SVD_matrix[row_num,] %>% select(user$ID_B4) %>% as.numeric())
+  tmp_pred_B1 = pred_SVD_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_B1) %>% as.numeric()
+  tmp_pred_B2 = pred_SVD_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_B2) %>% as.numeric()
+  tmp_pred_B3 = pred_SVD_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_B3) %>% as.numeric()
+  tmp_pred_B4 = pred_SVD_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_B4) %>% as.numeric()
+  data_SVD_prediction <- add_row(data_SVD_prediction, 
+                                  ResponseId = user$ResponseId, 
+                                  pred_B1 = tmp_pred_B1, 
+                                  pred_B2 = tmp_pred_B2, 
+                                  pred_B3 = tmp_pred_B3,
+                                  pred_B4 = tmp_pred_B4)
 }  
 
-data_articleIDs <- tibble::add_column(data_articleIDs, pred_B1)
-data_articleIDs <- tibble::add_column(data_articleIDs, pred_B2)
-data_articleIDs <- tibble::add_column(data_articleIDs, pred_B3)
-data_articleIDs <- tibble::add_column(data_articleIDs, pred_B4)
+data_article_SVD <- inner_join(data_article_SVD, data_SVD_prediction, by = "ResponseId")
 
+# Accuracy SVD
+data_article_SVD <- mutate(data_article_SVD, pred_B1_round = round(pred_B1, digits = 0))
+data_article_SVD <- mutate(data_article_SVD, pred_B2_round = round(pred_B2, digits = 0))
+data_article_SVD <- mutate(data_article_SVD, pred_B3_round = round(pred_B3, digits = 0))
+data_article_SVD <- mutate(data_article_SVD, pred_B4_round = round(pred_B4, digits = 0))
 
-data_articleIDs %>% select(loop2.1_1, pred_B1) %>% psych::pairs.panels(hist.col="skyblue")
-data_articleIDs %>% select(loop2.2_1, pred_B2) %>% psych::pairs.panels(hist.col="skyblue")
-data_articleIDs %>% select(loop2.3_1, pred_B3) %>% psych::pairs.panels(hist.col="skyblue")
-data_articleIDs %>% select(loop2.4_1, pred_B4) %>% psych::pairs.panels(hist.col="skyblue")
+accuracy_SVD<- tibble(B1 = as.numeric(0), B2 = as.numeric(0), B3 = as.numeric(0), B4 = as.numeric(0))
 
+for (i in 1:length(data_article_UBCF$ResponseId)){
+  user <- data_article_SVD[i,]
+  accuracy_SVD <- tibble(B1 = accuracy_SVD$B1 + sum(user$loop2.1_1 == user$pred_B1_round), 
+                         B2 = accuracy_SVD$B2 + sum(user$loop2.2_1 == user$pred_B2_round), 
+                         B3 = accuracy_SVD$B3 + sum(user$loop2.3_1 == user$pred_B3_round),
+                         B4 = accuracy_SVD$B4 + sum(user$loop2.4_1 == user$pred_B4_round))
+}
 
+accuracy_SVD <- accuracy_SVD %>%  pivot_longer(cols= c(B1, B2, B3, B4), names_to = "Artikel", values_to = "Accuracy")
+accuracy_SVD <- mutate(accuracy_SVD, Accuracy_rel = Accuracy/length(data_article_SVD$ResponseId))
+
+describe.mean.sd(accuracy_SVD$Accuracy_rel)
+
+# Correllation of SVD Prediction
+data_article_SVD %>% select(loop2.1_1, pred_B1) %>% psych::pairs.panels(hist.col="skyblue")
+data_article_SVD %>% select(loop2.2_1, pred_B2) %>% psych::pairs.panels(hist.col="skyblue")
+data_article_SVD %>% select(loop2.3_1, pred_B3) %>% psych::pairs.panels(hist.col="skyblue")
+data_article_SVD %>% select(loop2.4_1, pred_B4) %>% psych::pairs.panels(hist.col="skyblue")
+
+# Correlation per User  
+mrg_SVDRating_predictions <- data_article_SVD %>% group_by(ResponseId) %>% 
+                            gather(key = "Artikel", value ="User_Bewertung", loop2.1_1, loop2.2_1, loop2.3_1, loop2.4_1) %>% 
+                            gather(key = "Prediction", value = "RS_Prediction", pred_B1, pred_B2, pred_B3, pred_B4) %>% 
+                            mutate(Artikel = str_remove(Artikel, "loop2.")) %>% 
+                            mutate(Artikel = str_remove(Artikel, "_1")) %>% 
+                            mutate(Prediction = str_remove(Prediction, "pred_B")) %>% 
+                            filter (Artikel == Prediction) %>% 
+                            select(ResponseId, User_Bewertung, RS_Prediction)
+  
+cor_SVDRating_predictions <- mrg_SVDRating_predictions %>%           
+  group_by(ResponseId) %>%
+  mutate(cor_user_SVD = cor(User_Bewertung, RS_Prediction)) %>%
+  summarise(cor_user_SVD_A = mean(cor_user_SVD))
+
+data_article_SVD <- inner_join(data_article_SVD, cor_SVDRating_predictions, by="ResponseId") 
+
+# Distance per User
+dist_SVDRating_predictions <- mrg_SVDRating_predictions %>% 
+  group_by(ResponseId) %>% 
+  mutate(Abstand = abs(RS_Prediction - User_Bewertung)) %>% 
+  summarise(user_pred_abstand_SVD = mean(Abstand))
+
+data_article_SVD <- inner_join(data_article_SVD, dist_SVDRating_predictions, by="ResponseId") 
 ```
+
+
 
 
 
