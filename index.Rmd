@@ -41,10 +41,10 @@ library(apastats)
 ```{r child = 'Stichprobenbeschreibung.Rmd'}
 ```
 
-# Korrelationen
-```{r child = 'Korrelationen.Rmd'}
-```
-
 # Prediction
 ```{r child = 'Predictions.Rmd'}
+```
+
+# Korrelationen
+```{r child = 'Korrelationen.Rmd'}
 ```

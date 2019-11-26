@@ -159,15 +159,19 @@ data_article_UBCF <- inner_join(data_article_UBCF, cor_pre_UBCFRating_prediction
 # Distance per User
 dist_post_UBCFRating_predictions <- mrg_post_UBCFRating_predictions %>% 
   group_by(ResponseId) %>% 
-  mutate(Abstand = abs(RS_Post_Prediction - User_Bewertung)) %>% 
-  summarise(user_post_abstand_UBCF = mean(Abstand))
+  mutate(Abstand = RS_Post_Prediction - User_Bewertung) %>% 
+  mutate(Abstand_Abs = abs(RS_Post_Prediction - User_Bewertung)) %>% 
+  summarise(user_post_abstand_UBCF = mean(Abstand),
+            user_post_abstand_abs_UBCF = mean(Abstand_Abs))
 
 data_article_UBCF <- inner_join(data_article_UBCF, dist_post_UBCFRating_predictions, by="ResponseId") 
 
 dist_pre_UBCFRating_predictions <- mrg_pre_UBCFRating_predictions %>% 
   group_by(ResponseId) %>% 
-  mutate(Abstand = abs(RS_Pre_Prediction - User_Bewertung)) %>% 
-  summarise(user_pre_abstand_UBCF = mean(Abstand))
+  mutate(Abstand = RS_Pre_Prediction - User_Bewertung) %>% 
+  mutate(Abstand_Abs = abs(RS_Pre_Prediction - User_Bewertung)) %>% 
+  summarise(user_pre_abstand_UBCF = mean(Abstand),
+            user_pre_abstand_abs_UBCF= mean(Abstand_Abs))
 
 data_article_UBCF <- inner_join(data_article_UBCF, dist_pre_UBCFRating_predictions, by="ResponseId") 
 
@@ -179,7 +183,17 @@ data_article_UBCF <- inner_join(data_article_UBCF, dist_pre_UBCFRating_predictio
 #describe.mean.sd(data_article_UBCF$cor_user_UBCF_post)
 #describe.mean.sd(data_article_UBCF$user_pre_abstand_UBCF)
 #describe.mean.sd(data_article_UBCF$user_post_abstand_UBCF)
+```
 
+```{r plots_correlation_per_User_UBCF}
+ggstatsplot::gghistostats(data_article_UBCF, cor_user_UBCF_pre)
+ggstatsplot::gghistostats(data_article_UBCF, cor_user_UBCF_post)
+
+ggstatsplot::gghistostats(data_article_UBCF, user_pre_abstand_UBCF)
+ggstatsplot::gghistostats(data_article_UBCF, user_post_abstand_UBCF)
+
+ggstatsplot::gghistostats(data_article_UBCF, user_pre_abstand_abs_UBCF)
+ggstatsplot::gghistostats(data_article_UBCF, user_post_abstand_abs_UBCF)
 ```
 
 Ein weiterer Indikator, dass sich die Qualität des UBCF Empfehlungssystems durch das Anlernen verbessert hat, ist die Korrelation zwischen den eigentlichen Bewertungen und den Vorhersagen des Systems. So gab es beim ungelernten System im durchschnitt nur eine leichte Korrelation zwischen den tatsächlichen und vorhergesagten Ergebnissen (`r describe.mean.sd(data_article_UBCF$cor_user_UBCF_pre)`). Beim angelernten System hingegen gab es überwiegend starke positive Korrelationen, was sich auch im Durchschnitt wiederspiegelt (`r describe.mean.sd(data_article_UBCF$cor_user_UBCF_post)`). Darüber hinaus ist auch der Abstand zwischen den tatsächlichen und vorhergesagten Werten im Vergleich zwischen dem unangelernten (`r describe.mean.sd(data_article_UBCF$user_pre_abstand_UBCF)`) und dem angelernten (`r describe.mean.sd(data_article_UBCF$user_post_abstand_UBCF)`) System gesunken. Auch dies zeigt, dass das System sich verbessert hat. 
@@ -311,15 +325,20 @@ data_article_SVD <- inner_join(data_article_SVD, cor_pre_SVDRating_predictions, 
 # Distance per User
 dist_post_SVDRating_predictions <- mrg_post_SVDRating_predictions %>% 
   group_by(ResponseId) %>% 
-  mutate(Abstand = abs(RS_Post_Prediction - User_Bewertung)) %>% 
-  summarise(user_post_abstand_SVD = mean(Abstand))
+  mutate(Abstand = RS_Post_Prediction - User_Bewertung) %>% 
+  mutate(Abstand_Abs = abs(RS_Post_Prediction - User_Bewertung)) %>% 
+  summarise(user_post_abstand_SVD = mean(Abstand),
+            user_post_abstand_abs_SVD = mean(Abstand_Abs))
+
 
 data_article_SVD <- inner_join(data_article_SVD, dist_post_SVDRating_predictions, by="ResponseId") 
 
 dist_pre_SVDRating_predictions <- mrg_pre_SVDRating_predictions %>% 
   group_by(ResponseId) %>% 
-  mutate(Abstand = abs(RS_Pre_Prediction - User_Bewertung)) %>% 
-  summarise(user_pre_abstand_SVD = mean(Abstand))
+  mutate(Abstand = RS_Pre_Prediction - User_Bewertung) %>% 
+  mutate(Abstand_Abs = abs(RS_Pre_Prediction - User_Bewertung)) %>% 
+  summarise(user_pre_abstand_SVD = mean(Abstand),
+            user_pre_abstand_abs_SVD= mean(Abstand_Abs))
 
 data_article_SVD <- inner_join(data_article_SVD, dist_pre_SVDRating_predictions, by="ResponseId") 
 
@@ -331,5 +350,16 @@ data_article_SVD <- inner_join(data_article_SVD, dist_pre_SVDRating_predictions,
 #describe.mean.sd(data_article_SVD$cor_user_SVD_post)
 #describe.mean.sd(data_article_SVD$user_pre_abstand_SVD)
 #describe.mean.sd(data_article_SVD$user_post_abstand_SVD)
+```
+
+```{r plots_correlation_per_User_SVD}
+ggstatsplot::gghistostats(data_article_SVD, cor_user_SVD_pre)
+ggstatsplot::gghistostats(data_article_SVD, cor_user_SVD_post)
+
+ggstatsplot::gghistostats(data_article_SVD, user_pre_abstand_SVD)
+ggstatsplot::gghistostats(data_article_SVD, user_post_abstand_SVD)
+
+ggstatsplot::gghistostats(data_article_SVD, user_pre_abstand_abs_SVD)
+ggstatsplot::gghistostats(data_article_SVD, user_post_abstand_abs_SVD)
 ```
 Ein weiterer Indikator, dass sich die Qualität des SVD Empfehlungssystems durch das Anlernen verbessert hat, ist die Korrelation zwischen den eigentlichen Bewertungen und den Vorhersagen des Systems. So gab es beim ungelernten System so viele positive wie auch negative Korrelationen, dass diese sich im Durchschnitt aufgehoben haben (`r describe.mean.sd(data_article_SVD$cor_user_SVD_pre)`). Beim angelernten System hingegen gab es überwiegend starke positive Korrelationen, was sich auch im Durchschnitt wiederspiegelt (`r describe.mean.sd(data_article_SVD$cor_user_SVD_post)`). Darüber hinaus ist auch der Abstand zwischen den tatsächlichen und vorhergesagten Werten im Vergleich zwischen dem unangelernten (`r describe.mean.sd(data_article_SVD$user_pre_abstand_SVD)`) und dem angelernten (`r describe.mean.sd(data_article_SVD$user_post_abstand_SVD)`) System gesunken. Auch dies zeigt, dass das System sich verbessert hat. 
