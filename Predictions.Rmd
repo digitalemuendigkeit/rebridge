@@ -31,8 +31,8 @@ pre_pred_UBCF <- recommenderlab::predict(pre_rec_UBCF, m[1:154], type="ratingMat
 post_pred_SVD <- recommenderlab::predict(post_rec_SVD, m[1:154], type="ratingMatrix")
 pre_pred_SVD <- recommenderlab::predict(pre_rec_SVD, m[1:154], type="ratingMatrix")
 ```
-
-```{r prediction_UBCF}
+## UBCF
+```{r accuracy_UBCF}
 data_article_UBCF <- data_cleaned  %>% select(ResponseId, starts_with("ID_A"), starts_with("loop1")) %>%  labelled::remove_labels() %>% labelled::remove_attributes(. , "display_width")
 
 tmp <- (as(post_pred_UBCF, "matrix"))
@@ -103,9 +103,14 @@ accuracy_UBCF <- accuracy_UBCF %>%  pivot_longer(cols= c(post_A1, post_A2, post_
 
 accuracy_UBCF <- mutate(accuracy_UBCF, Accuracy_rel = Accuracy/length(data_article_UBCF$ResponseId))
 
-describe.mean.sd(accuracy_UBCF$Accuracy_rel[1:4])
-describe.mean.sd(accuracy_UBCF$Accuracy_rel[5:8])
+#describe.mean.sd(accuracy_UBCF$Accuracy_rel[1:4])
+#describe.mean.sd(accuracy_UBCF$Accuracy_rel[5:8])
+```
 
+Das unangelernte Empfehlungssystem hat jeden vierten Artikel richtig vorhergesagt (`r describe.mean.sd(accuracy_UBCF$Accuracy_rel[5:8])`). Das angelernte Empfehlungssystem hingegen jeden dritten (`r describe.mean.sd(accuracy_UBCF$Accuracy_rel[1:4])`). Generell ist die Genauigkeit des UBCF Empfehlungssystems nicht sehr hoch, aber das Anlernen währen der Online-Umfrage hat funktioniert.
+
+
+```{r correlation_UBCF}
 # Correllation of UBCF Prediction
 data_article_UBCF %>% select(loop1.1_1, post_pred_A1) %>% psych::pairs.panels(hist.col="skyblue")
 data_article_UBCF %>% select(loop1.2_1, post_pred_A2) %>% psych::pairs.panels(hist.col="skyblue")
@@ -115,7 +120,9 @@ data_article_UBCF %>% select(loop1.1_1, pre_pred_A1) %>% psych::pairs.panels(his
 data_article_UBCF %>% select(loop1.2_1, pre_pred_A2) %>% psych::pairs.panels(hist.col="skyblue")
 data_article_UBCF %>% select(loop1.3_1, pre_pred_A3) %>% psych::pairs.panels(hist.col="skyblue")
 data_article_UBCF %>% select(loop1.4_1, pre_pred_A4) %>% psych::pairs.panels(hist.col="skyblue")
+```
 
+```{r correlation_per_User_UBCF, include=FALSE}
 # Correlation per User  
 mrg_post_UBCFRating_predictions <- data_article_UBCF %>% group_by(ResponseId) %>% 
                             gather(key = "Artikel", value ="User_Bewertung", loop1.1_1, loop1.2_1, loop1.3_1, loop1.4_1) %>% 
@@ -164,9 +171,22 @@ dist_pre_UBCFRating_predictions <- mrg_pre_UBCFRating_predictions %>%
 
 data_article_UBCF <- inner_join(data_article_UBCF, dist_pre_UBCFRating_predictions, by="ResponseId") 
 
+#summary(data_article_UBCF$cor_user_UBCF_pre, na.rm = TRUE)
+#summary(data_article_UBCF$cor_user_UBCF_post, na.rm = TRUE)
+#summary(data_article_UBCF$user_pre_abstand_UBCF, na.rm = TRUE)
+#summary(data_article_UBCF$user_post_abstand_UBCF, na.rm = TRUE)
+#describe.mean.sd(data_article_UBCF$cor_user_UBCF_pre)
+#describe.mean.sd(data_article_UBCF$cor_user_UBCF_post)
+#describe.mean.sd(data_article_UBCF$user_pre_abstand_UBCF)
+#describe.mean.sd(data_article_UBCF$user_post_abstand_UBCF)
+
 ```
 
-```{r prediction_SVD}
+Ein weiterer Indikator, dass sich die Qualität des UBCF Empfehlungssystems durch das Anlernen verbessert hat, ist die Korrelation zwischen den eigentlichen Bewertungen und den Vorhersagen des Systems. So gab es beim ungelernten System im durchschnitt nur eine leichte Korrelation zwischen den tatsächlichen und vorhergesagten Ergebnissen (`r describe.mean.sd(data_article_UBCF$cor_user_UBCF_pre)`). Beim angelernten System hingegen gab es überwiegend starke positive Korrelationen, was sich auch im Durchschnitt wiederspiegelt (`r describe.mean.sd(data_article_UBCF$cor_user_UBCF_post)`). Darüber hinaus ist auch der Abstand zwischen den tatsächlichen und vorhergesagten Werten im Vergleich zwischen dem unangelernten (`r describe.mean.sd(data_article_UBCF$user_pre_abstand_UBCF)`) und dem angelernten (`r describe.mean.sd(data_article_UBCF$user_post_abstand_UBCF)`) System gesunken. Auch dies zeigt, dass das System sich verbessert hat. 
+
+## SVD
+
+```{r accuracy_SVD}
 data_article_SVD <- data_cleaned  %>% select(ResponseId, starts_with("ID_B"), starts_with("loop2")) %>%  labelled::remove_labels() %>% labelled::remove_attributes(. , "display_width")
 
 tmp <- (as(post_pred_SVD, "matrix"))
@@ -234,12 +254,15 @@ for (i in 1:length(data_article_SVD$ResponseId)){
 }
 
 accuracy_SVD <- accuracy_SVD %>%  pivot_longer(cols= c(post_B1, post_B2, post_B3, post_B4,pre_B1, pre_B2, pre_B3, pre_B4), names_to = "Artikel", values_to = "Accuracy")
-
 accuracy_SVD <- mutate(accuracy_SVD, Accuracy_rel = Accuracy/length(data_article_SVD$ResponseId))
 
-describe.mean.sd(accuracy_SVD$Accuracy_rel[1:4])
-describe.mean.sd(accuracy_SVD$Accuracy_rel[5:8])
+#describe.mean.sd(accuracy_SVD$Accuracy_rel[1:4])
+#describe.mean.sd(accuracy_SVD$Accuracy_rel[5:8])
+```
 
+Das unangelernte Empfehlungssystem hat jeden dritten Artikel richtig vorhergesagt (`r describe.mean.sd(accuracy_SVD$Accuracy_rel[5:8])`). Das angelernte Empfehlungssystem hingegen jeden zweiten (`r describe.mean.sd(accuracy_SVD$Accuracy_rel[1:4])`). Generell ist die Genauigkeit des SVD Empfehlungssystems mittelmäßig hoch, aber das Anlernen währen der Online-Umfrage hat funktioniert.
+
+```{r correlation_SVD}
 # Correllation of SVD Prediction
 data_article_SVD %>% select(loop2.1_1, post_pred_B1) %>% psych::pairs.panels(hist.col="skyblue")
 data_article_SVD %>% select(loop2.2_1, post_pred_B2) %>% psych::pairs.panels(hist.col="skyblue")
@@ -249,7 +272,9 @@ data_article_SVD %>% select(loop2.1_1, pre_pred_B1) %>% psych::pairs.panels(hist
 data_article_SVD %>% select(loop2.2_1, pre_pred_B2) %>% psych::pairs.panels(hist.col="skyblue")
 data_article_SVD %>% select(loop2.3_1, pre_pred_B3) %>% psych::pairs.panels(hist.col="skyblue")
 data_article_SVD %>% select(loop2.4_1, pre_pred_B4) %>% psych::pairs.panels(hist.col="skyblue")
+```
 
+```{r correlation_per_User_SVD, include=FALSE}
 # Correlation per User  
 mrg_post_SVDRating_predictions <- data_article_SVD %>% group_by(ResponseId) %>% 
                             gather(key = "Artikel", value ="User_Bewertung", loop2.1_1, loop2.2_1, loop2.3_1, loop2.4_1) %>% 
@@ -297,4 +322,14 @@ dist_pre_SVDRating_predictions <- mrg_pre_SVDRating_predictions %>%
   summarise(user_pre_abstand_SVD = mean(Abstand))
 
 data_article_SVD <- inner_join(data_article_SVD, dist_pre_SVDRating_predictions, by="ResponseId") 
+
+#summary(data_article_SVD$cor_user_SVD_pre, na.rm = TRUE)
+#summary(data_article_SVD$cor_user_SVD_post, na.rm = TRUE)
+#summary(data_article_SVD$user_pre_abstand_SVD, na.rm = TRUE)
+#summary(data_article_SVD$user_post_abstand_SVD, na.rm = TRUE)
+#describe.mean.sd(data_article_SVD$cor_user_SVD_pre)
+#describe.mean.sd(data_article_SVD$cor_user_SVD_post)
+#describe.mean.sd(data_article_SVD$user_pre_abstand_SVD)
+#describe.mean.sd(data_article_SVD$user_post_abstand_SVD)
 ```
+Ein weiterer Indikator, dass sich die Qualität des SVD Empfehlungssystems durch das Anlernen verbessert hat, ist die Korrelation zwischen den eigentlichen Bewertungen und den Vorhersagen des Systems. So gab es beim ungelernten System so viele positive wie auch negative Korrelationen, dass diese sich im Durchschnitt aufgehoben haben (`r describe.mean.sd(data_article_SVD$cor_user_SVD_pre)`). Beim angelernten System hingegen gab es überwiegend starke positive Korrelationen, was sich auch im Durchschnitt wiederspiegelt (`r describe.mean.sd(data_article_SVD$cor_user_SVD_post)`). Darüber hinaus ist auch der Abstand zwischen den tatsächlichen und vorhergesagten Werten im Vergleich zwischen dem unangelernten (`r describe.mean.sd(data_article_SVD$user_pre_abstand_SVD)`) und dem angelernten (`r describe.mean.sd(data_article_SVD$user_post_abstand_SVD)`) System gesunken. Auch dies zeigt, dass das System sich verbessert hat. 

@@ -20,7 +20,8 @@ library(haven)
 #library(sjPlot)
 #library(sjlabelled)
 #library(kableExtra)
-#library(knitr)
+library(knitr)
+options(digits=2) # zwei Nachkommastellen
 library(apastats)
 ```
 
@@ -42,4 +43,8 @@ library(apastats)
 
 # Korrelationen
 ```{r child = 'Korrelationen.Rmd'}
+```
+
+# Prediction
+```{r child = 'Predictions.Rmd'}
 ```
