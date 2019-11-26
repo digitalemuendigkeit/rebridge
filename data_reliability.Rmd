@@ -36,10 +36,10 @@ result <- psych::scoreItems(keys = keys_bf , rel_big)
 result
 #result$scores
 
-# Reliabilität zu schlecht, daher keine Auswertung!
-# data <- bind_cols(data_cleaned, as.data.frame(result$scores))
+data_bigFive <- data_cleaned %>% select(ResponseId)
+data_bigFive <- bind_cols(data_bigFive, as.data.frame(result$scores))
 ```
-Die Reliabilität von den Gewissenhaftigkeit ($\alpha =$ `r result$alpha[2]`), Verträglichkeit ($\alpha =$ `r result$alpha[4]`) und Neurozität ($\alpha =$ `r result$alpha[5]`) ist jeweils kleiner als $\alpha = .6$. Einzig die Aussagen zur Extraversion ($\alpha =$ `r result$alpha[3]`) weist eine gute und Offenheit ($\alpha =$ `r result$alpha[1]`) eine noch akzeptable auswertbare Realibität auf. Daher wird auf eine Auswertung der Big Five im Folgenden verzichtet.
+Die Reliabilität von den Gewissenhaftigkeit ($\alpha =$ `r result$alpha[2]`), Verträglichkeit ($\alpha =$ `r result$alpha[4]`) und Neurozität ($\alpha =$ `r result$alpha[5]`) ist jeweils kleiner als $\alpha = .6$. Einzig die Aussagen zur Extraversion ($\alpha =$ `r result$alpha[3]`) weist eine gute und Offenheit ($\alpha =$ `r result$alpha[1]`) eine noch akzeptable auswertbare Realibität auf. Da es sich um eine erprobte Skala handelt, werden die Daten trotz schlechert Reliabilität weiter verwendet.
 
 ## KUT
 <!--- Auswertung des KUT 
@@ -144,10 +144,10 @@ Aus drei der sieben Aussagen zur Bewertung des Anlernsystems wurde ein Durchschn
 rel_UBCF <- data_cleaned %>% select(starts_with("loop1"),starts_with("UBCF"))
 
 # Neucodieren der einzelnen Artikelbewertungen
-rel_UBCF$loop1.1_1<-recode(rel_UBCF$loop1.1_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-rel_UBCF$loop1.2_1<-recode(rel_UBCF$loop1.2_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-rel_UBCF$loop1.3_1<-recode(rel_UBCF$loop1.3_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-rel_UBCF$loop1.4_1<-recode(rel_UBCF$loop1.4_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+#rel_UBCF$loop1.1_1<-recode(rel_UBCF$loop1.1_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+#rel_UBCF$loop1.2_1<-recode(rel_UBCF$loop1.2_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+#rel_UBCF$loop1.3_1<-recode(rel_UBCF$loop1.3_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+#rel_UBCF$loop1.4_1<-recode(rel_UBCF$loop1.4_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
 
 keys_bf  <- list(UBCF_SUM_Artikel = c("loop1.1_1","loop1.2_1","loop1.3_1","loop1.4_1"),
                  UBCF_ArticleReview_quality = c("UBCF_ArticleReview_quality1","UBCF_ArticleReview_quality2","UBCF_ArticleReview_quality3"),
@@ -177,10 +177,10 @@ Die Zusammenfassung der Scala, wie gut die Probanden das UBCF-Empfehlungssystem 
 rel_SVD <- data_cleaned %>% select(starts_with("loop2"),starts_with("SVD"))
 
 # Neucodieren der einzelnen Artikelbewertungen
-rel_SVD$loop2.1_1<-recode(rel_SVD$loop2.1_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-rel_SVD$loop2.2_1<-recode(rel_SVD$loop2.2_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-rel_SVD$loop2.3_1<-recode(rel_SVD$loop2.3_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
-rel_SVD$loop2.4_1<-recode(rel_SVD$loop2.4_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+#rel_SVD$loop2.1_1<-recode(rel_SVD$loop2.1_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+#rel_SVD$loop2.2_1<-recode(rel_SVD$loop2.2_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+#rel_SVD$loop2.3_1<-recode(rel_SVD$loop2.3_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+#rel_SVD$loop2.4_1<-recode(rel_SVD$loop2.4_1, `0` = 1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
 
 keys_bf  <- list(SVD_SUM_Artikel = c("loop2.1_1","loop2.2_1","loop2.3_1","loop2.4_1"),
                  SVD_ArticleReview_quality = c("SVD_ArticleReview_quality1","SVD_ArticleReview_quality2","SVD_ArticleReview_quality3"),
