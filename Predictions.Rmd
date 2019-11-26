@@ -49,14 +49,16 @@ data_UBCF_prediction <- data.frame(ResponseId=character(), post_pred_A1=numeric(
 for (i in 1:length(data_article_UBCF$ResponseId)){
   user <- data_article_UBCF[i,]
   user_ID <- paste("\"",user$ResponseId,"\"", sep = "")
-  tmp_post_pred_A1 = post_pred_UBCF_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_A1) %>% as.numeric()
-  tmp_post_pred_A2 = post_pred_UBCF_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_A2) %>% as.numeric()
-  tmp_post_pred_A3 = post_pred_UBCF_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_A3) %>% as.numeric()
-  tmp_post_pred_A4 = post_pred_UBCF_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_A4) %>% as.numeric()
-  tmp_pre_pred_A1 = pre_pred_UBCF_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_A1) %>% as.numeric()
-  tmp_pre_pred_A2 = pre_pred_UBCF_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_A2) %>% as.numeric()
-  tmp_pre_pred_A3 = pre_pred_UBCF_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_A3) %>% as.numeric()
-  tmp_pre_pred_A4 = pre_pred_UBCF_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_A4) %>% as.numeric()
+  post_pred_user <- post_pred_UBCF_matrix %>% filter(ResponseId == user_ID)
+  pre_pred_user <- pre_pred_UBCF_matrix %>% filter(ResponseId == user_ID)
+  tmp_post_pred_A1 <- post_pred_user %>% select(user$ID_A1) %>% as.numeric()
+  tmp_post_pred_A2 <- post_pred_user %>% select(user$ID_A2) %>% as.numeric()
+  tmp_post_pred_A3 <- post_pred_user %>% select(user$ID_A3) %>% as.numeric()
+  tmp_post_pred_A4 <- post_pred_user %>% select(user$ID_A4) %>% as.numeric()
+  tmp_pre_pred_A1 <- pre_pred_user %>% select(user$ID_A1) %>% as.numeric()
+  tmp_pre_pred_A2 <- pre_pred_user %>% select(user$ID_A2) %>% as.numeric()
+  tmp_pre_pred_A3 <- pre_pred_user %>% select(user$ID_A3) %>% as.numeric()
+  tmp_pre_pred_A4 <- pre_pred_user %>% select(user$ID_A4) %>% as.numeric()
   data_UBCF_prediction <- add_row(data_UBCF_prediction, 
                                   ResponseId = user$ResponseId,
                                   post_pred_A1 = tmp_post_pred_A1, 
@@ -183,14 +185,16 @@ data_SVD_prediction <- data.frame(ResponseId=character(), post_pred_B1=numeric()
 for (i in 1:length(data_article_SVD$ResponseId)){
   user <- data_article_SVD[i,]
   user_ID <- paste("\"",user$ResponseId,"\"", sep = "")
-  tmp_post_pred_B1 = post_pred_SVD_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_B1) %>% as.numeric()
-  tmp_post_pred_B2 = post_pred_SVD_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_B2) %>% as.numeric()
-  tmp_post_pred_B3 = post_pred_SVD_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_B3) %>% as.numeric()
-  tmp_post_pred_B4 = post_pred_SVD_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_B4) %>% as.numeric()
-  tmp_pre_pred_B1 = pre_pred_SVD_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_B1) %>% as.numeric()
-  tmp_pre_pred_B2 = pre_pred_SVD_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_B2) %>% as.numeric()
-  tmp_pre_pred_B3 = pre_pred_SVD_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_B3) %>% as.numeric()
-  tmp_pre_pred_B4 = pre_pred_SVD_matrix %>% filter(ResponseId == user_ID) %>% select(user$ID_B4) %>% as.numeric()
+  post_pred_user <- post_pred_SVD_matrix %>% filter(ResponseId == user_ID)
+  pre_pred_user <- pre_pred_SVD_matrix %>% filter(ResponseId == user_ID)
+  tmp_post_pred_B1 <- post_pred_user %>% select(user$ID_B1) %>% as.numeric()
+  tmp_post_pred_B2 <- post_pred_user %>% select(user$ID_B2) %>% as.numeric()
+  tmp_post_pred_B3 <- post_pred_user %>% select(user$ID_B3) %>% as.numeric()
+  tmp_post_pred_B4 <- post_pred_user %>% select(user$ID_B4) %>% as.numeric()
+  tmp_pre_pred_B1 <- pre_pred_user %>% select(user$ID_B1) %>% as.numeric()
+  tmp_pre_pred_B2 <- pre_pred_user %>% select(user$ID_B2) %>% as.numeric()
+  tmp_pre_pred_B3 <- pre_pred_user %>% select(user$ID_B3) %>% as.numeric()
+  tmp_pre_pred_B4 <- pre_pred_user %>% select(user$ID_B4) %>% as.numeric()
   data_SVD_prediction <- add_row(data_SVD_prediction, 
                                   ResponseId = user$ResponseId,
                                   post_pred_B1 = tmp_post_pred_B1, 
