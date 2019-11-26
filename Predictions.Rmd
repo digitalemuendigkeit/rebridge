@@ -12,7 +12,7 @@ library(tidyverse)
 library(apastats)
 ```
 
-```{r prediction_prepare}
+```{r prediction_prepare, cache=TRUE}
 m <- read_feather("./ratings_comments.feather")  %>% as.data.frame() %>% as("realRatingMatrix")
 
 # PostTrained
@@ -23,16 +23,17 @@ post_rec_SVD <- Recommender(m, method = "SVD")
 pre_rec_UBCF <- Recommender(m[155:5560], method = "UBCF")
 pre_rec_SVD <- Recommender(m[155:5560], method = "SVD")
 
-data_article_UBCF <- data_cleaned  %>% select(ResponseId, starts_with("ID_A"), starts_with("loop1")) %>%  labelled::remove_labels() %>% labelled::remove_attributes(. , "display_width")
-
-data_article_SVD <- data_cleaned  %>% select(ResponseId, starts_with("ID_B"), starts_with("loop2")) %>%  labelled::remove_labels() %>% labelled::remove_attributes(. , "display_width")
-
-```
-
-```{r prediction_UBCF}
+# Create UBCF Prediction
 post_pred_UBCF <- recommenderlab::predict(post_rec_UBCF, m[1:154], type="ratingMatrix")
 pre_pred_UBCF <- recommenderlab::predict(pre_rec_UBCF, m[1:154], type="ratingMatrix")
 
+# Create SVD Prediction
+post_pred_SVD <- recommenderlab::predict(post_rec_SVD, m[1:154], type="ratingMatrix")
+pre_pred_SVD <- recommenderlab::predict(pre_rec_SVD, m[1:154], type="ratingMatrix")
+```
+
+```{r prediction_UBCF}
+data_article_UBCF <- data_cleaned  %>% select(ResponseId, starts_with("ID_A"), starts_with("loop1")) %>%  labelled::remove_labels() %>% labelled::remove_attributes(. , "display_width")
 
 tmp <- (as(post_pred_UBCF, "matrix"))
 post_pred_UBCF_matrix <- as.data.frame(tmp)
@@ -166,9 +167,7 @@ data_article_UBCF <- inner_join(data_article_UBCF, dist_pre_UBCFRating_predictio
 ```
 
 ```{r prediction_SVD}
-post_pred_SVD <- recommenderlab::predict(post_rec_SVD, m[1:154], type="ratingMatrix")
-pre_pred_SVD <- recommenderlab::predict(pre_rec_SVD, m[1:154], type="ratingMatrix")
-
+data_article_SVD <- data_cleaned  %>% select(ResponseId, starts_with("ID_B"), starts_with("loop2")) %>%  labelled::remove_labels() %>% labelled::remove_attributes(. , "display_width")
 
 tmp <- (as(post_pred_SVD, "matrix"))
 post_pred_SVD_matrix <- as.data.frame(tmp)

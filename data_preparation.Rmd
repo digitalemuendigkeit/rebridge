@@ -23,7 +23,7 @@ library(apastats)
 ```
 
 <!--- Läd die Daten und speichert sie in "raw" -->
-```{r read_data}
+```{r read_data, cache=TRUE}
 raw <- read_sav(file= "data/191118-data.sav")
 ```
 
@@ -32,9 +32,21 @@ raw <- read_sav(file= "data/191118-data.sav")
 TODO: O-Sterne Bewertungen in 1-Sterne Bewertungen umformatieren.
 
 -->
-```{r cleaning}
+```{r cleaning, cache=TRUE}
 data_cleaned <- raw %>% filter(Progress == 100) %>%    select(-StartDate,-EndDate,-Status,-IPAddress,-Duration__in_seconds_,-Progress,-Finished,-RecordedDate,-RecipientEmail,-RecipientFirstName,-RecipientLastName,-ExternalReference,-LocationLatitude,-LocationLongitude,-DistributionChannel,-UserLanguage,-ResponseID.0,-age.0,-gender.0,-topic,-randomTopicQuestion,-title,-body,-itemID,-subtitle,-date,-recsys,-rating,-iteration)  # Es werden nur die vollständigen Datensätze ausgewertet; überflüssige Spalten entfernt
 
+# Cleanup Zero Ratings
+data_cleaned$loop1.1_1<-recode(data_cleaned$loop1.1_1, `0` = 1)
+data_cleaned$loop1.2_1<-recode(data_cleaned$loop1.2_1, `0` = 1)
+data_cleaned$loop1.3_1<-recode(data_cleaned$loop1.3_1, `0` = 1)
+data_cleaned$loop1.4_1<-recode(data_cleaned$loop1.4_1, `0` = 1)
+data_cleaned$loop2.1_1<-recode(data_cleaned$loop2.1_1, `0` = 1)
+data_cleaned$loop2.2_1<-recode(data_cleaned$loop2.2_1, `0` = 1)
+data_cleaned$loop2.3_1<-recode(data_cleaned$loop2.3_1, `0` = 1)
+data_cleaned$loop2.4_1<-recode(data_cleaned$loop2.4_1, `0` = 1)
+```
+
+```{r data_split}
 # Einzeltabellen gegliedert nach Themenbereich
 data_demograph <- data_cleaned %>% select(ResponseId,gender,age,school,school_5_TEXT,education,education_6_TEXT,) # extrahiert die demographischen Daten
 data_newsConsum <- data_cleaned %>% select(ResponseId,starts_with("news"))
@@ -82,17 +94,8 @@ data_demograph <- data_demograph %>%  select(-school_5_TEXT, -education_6_TEXT)
 
 ```{r topic_no_answer}
 data_topicSelect$interestingTopic[is.na(data_topicSelect$interestingTopic)] <-9
+```
+ 
 
-```
- 
-```{r loop_zero_rating}
-data_cleaned$loop1.1_1<-recode(data_cleaned$loop1.1_1, `0` = 1)
-data_cleaned$loop1.2_1<-recode(data_cleaned$loop1.2_1, `0` = 1)
-data_cleaned$loop1.3_1<-recode(data_cleaned$loop1.3_1, `0` = 1)
-data_cleaned$loop1.4_1<-recode(data_cleaned$loop1.4_1, `0` = 1)
-data_cleaned$loop2.1_1<-recode(data_cleaned$loop2.1_1, `0` = 1)
-data_cleaned$loop2.2_1<-recode(data_cleaned$loop2.2_1, `0` = 1)
-data_cleaned$loop2.3_1<-recode(data_cleaned$loop2.3_1, `0` = 1)
-data_cleaned$loop2.4_1<-recode(data_cleaned$loop2.4_1, `0` = 1)
-```
- 
+
+
