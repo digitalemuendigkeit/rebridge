@@ -163,3 +163,238 @@ ggplot(data_priv,aes(x=data_cleaned$gender, y=RS_Privacy_Consern, group=as.numer
       coord_cartesian(ylim = c(1,6)) 
 ```
 
+# Confidence Intervall (bootstrapped)
+```{r}
+df %>% select(BF_O, BF_C) %>% psych::pairs.panels(lm = TRUE, cor = T, jiggle = T, stars = T, ci = T)
+
+test_cor <- data_bigFive %>% select(-ResponseId) %>% psych::cor.ci() 
+
+test_cor$ci %>% 
+  rownames_to_column() %>% 
+  bind_cols(data.frame("r"= test_cor$means)) %>% 
+  ggplot() + 
+  aes(x = reorder(rowname, r, FUN = mean) , y = r, ymin=`low.e`, ymax = `up.e`) + 
+  geom_errorbar(width = 0.2) + geom_point() + 
+  geom_line() +
+  scale_y_continuous(limits = c(-1,1))
+```
+
+# ggwithinstats Labor Korrelation
+```{r gg_ubcf}
+gg_ubcf_cor <- data_article_UBCF %>% select(ResponseId, Pretest = cor_user_UBCF_pre, Posttest = cor_user_UBCF_post) %>% pivot_longer(cols = c(Pretest, Posttest), names_to = "RecSys", values_to = "correlation")
+
+ggstatsplot::ggwithinstats(
+  data = gg_ubcf_cor,
+  x = RecSys,
+  y = correlation,
+  sort = "ascending", # ordering groups along the x-axis based on
+  sort.fun = median, # values of `y` variable
+  pairwise.comparisons = TRUE,
+  pairwise.display = "s",
+  pairwise.annotation = "p",
+  title = "UBCF - Korrelation zwischen Vorhersage und Realwert",
+  ggtheme = ggthemes::theme_fivethirtyeight(),
+  ggstatsplot.layer = FALSE,
+  messages = FALSE
+)
+```
+
+```{r gg_svd}
+gg_svd_cor <- data_article_SVD %>% select(ResponseId, Pretest = cor_user_SVD_pre, Posttest = cor_user_SVD_post) %>% pivot_longer(cols = c(Pretest, Posttest), names_to = "RecSys", values_to = "correlation")
+
+ggstatsplot::ggwithinstats(
+  data = gg_svd_cor,
+  x = RecSys,
+  y = correlation,
+  sort = "ascending", # ordering groups along the x-axis based on
+  sort.fun = median, # values of `y` variable
+  pairwise.comparisons = TRUE,
+  pairwise.display = "s",
+  pairwise.annotation = "p",
+  title = "SVD - Korrelation zwischen Vorhersage und Realwert",
+  ggtheme = ggthemes::theme_fivethirtyeight(),
+  ggstatsplot.layer = FALSE,
+  messages = FALSE
+)
+```
+
+# ggwithinstats Labor Abstand
+
+```{r mrg_svd}
+test <- data_article_SVD %>% group_by(ResponseId) %>% 
+                            gather(key = "Artikel", value ="User_Bewertung", loop2.1_1, loop2.2_1, loop2.3_1, loop2.4_1) %>% 
+                            gather(key = "Pre_Prediction", value = "RS_Pre_Prediction", pre_pred_B1_round, pre_pred_B2_round, pre_pred_B3_round, pre_pred_B4_round) %>% 
+                            mutate(Artikel = str_remove(Artikel, "loop2.")) %>% 
+                            mutate(Artikel = str_remove(Artikel, "_1")) %>% 
+                            mutate(Pre_Prediction = str_remove(Pre_Prediction, "pre_pred_B")) %>% 
+                            mutate(Pre_Prediction = str_remove(Pre_Prediction, "_round")) %>% 
+                            filter (Artikel == Pre_Prediction) %>% 
+                            select(ResponseId, Artikel, User_Bewertung, RS_Pre_Prediction)
+
+testB <- data_article_SVD %>% group_by(ResponseId) %>% 
+                            gather(key = "Artikel", value ="User_Bewertung", loop2.1_1, loop2.2_1, loop2.3_1, loop2.4_1) %>% 
+                            gather(key = "Post_Prediction", value = "RS_Post_Prediction", post_pred_B1_round, post_pred_B2_round, post_pred_B3_round, post_pred_B4_round) %>% 
+                            mutate(Artikel = str_remove(Artikel, "loop2.")) %>% 
+                            mutate(Artikel = str_remove(Artikel, "_1")) %>% 
+                            mutate(Post_Prediction = str_remove(Post_Prediction, "post_pred_B")) %>% 
+                            mutate(Post_Prediction = str_remove(Post_Prediction, "_round")) %>% 
+                            filter (Artikel == Post_Prediction) %>% 
+                            select(ResponseId, Artikel, User_Bewertung, RS_Post_Prediction)
+
+testC <- inner_join(test, testB, by = c("ResponseId","Artikel","User_Bewertung"))
+
+testD <- testC  %>%  
+  mutate(Abstand_Pretest = RS_Pre_Prediction - User_Bewertung) %>% 
+  mutate(Abstand_Posttest = RS_Post_Prediction - User_Bewertung) %>% 
+  mutate(ResponseId_Article = paste(ResponseId,Artikel,sep = "_")) %>% 
+  ungroup() %>% 
+  select(ResponseId_Article,Abstand_Pretest, Abstand_Posttest,Artikel) %>% 
+  #filter(Abstand_Pretest != Abstand_Posttest) %>% 
+  #filter((Abstand_Pretest > Abstand_Posttest & Abstand_Posttest >= 0)|(Abstand_Pretest < Abstand_Posttest & Abstand_Posttest <= 0)) %>% 
+  pivot_longer(cols = c(Abstand_Pretest , Abstand_Posttest), names_to = "Test", values_to = "Abstand")
+
+ggstatsplot::ggwithinstats(
+  data = testD,
+  x = Test,
+  y = Abstand,
+  title = "SVD - Vergleich zwischen Pre- und Posttest",
+  xlab = "Empfehlungssystem",
+  ylab = "Abstand zwischen Vorhersage und Bewertung",
+  sort = "ascending", # ordering groups along the x-axis based on
+  sort.fun = mean, # values of `y` variable
+  pairwise.comparisons = T,
+  pairwise.display = "s",
+  mean.plotting = F,
+  #title = "SVD - Korrelation zwischen Vorhersage und Realwert",
+  #ggtheme = ggthemes::theme_fivethirtyeight(),
+  ggstatsplot.layer = FALSE,
+  messages = FALSE,
+  results.subtitle = FALSE,
+)  + scale_y_continuous(breaks = c(-3,-2,-1,0,1,2,3))
+
+testE <- testC  %>%  
+  mutate(Abstand_Pretest = RS_Pre_Prediction - User_Bewertung) %>% 
+  mutate(Abstand_Posttest = RS_Post_Prediction - User_Bewertung) %>% 
+  mutate(ResponseId_Article = paste(ResponseId,Artikel,sep = "_")) %>% 
+  ungroup() %>% 
+  select(ResponseId_Article,Abstand_Pretest, Abstand_Posttest,Artikel) %>% 
+  filter(Abstand_Pretest != Abstand_Posttest) %>% 
+  #filter((Abstand_Pretest > Abstand_Posttest & Abstand_Posttest >= 0)|(Abstand_Pretest < Abstand_Posttest & Abstand_Posttest <= 0)) %>% 
+  pivot_longer(cols = c(Abstand_Pretest , Abstand_Posttest), names_to = "Test", values_to = "Abstand")
+
+ggstatsplot::ggwithinstats(
+  data = testE,
+  x = Test,
+  y = Abstand,
+  title = "SVD - Vergleich zwischen Pre- und Posttest",
+  xlab = "Empfehlungssystem",
+  ylab = "Abstand zwischen Vorhersage und Bewertung",
+  sort = "ascending", # ordering groups along the x-axis based on
+  sort.fun = mean, # values of `y` variable
+  pairwise.comparisons = T,
+  pairwise.display = "s",
+  mean.plotting = F,
+  #title = "SVD - Korrelation zwischen Vorhersage und Realwert",
+  #ggtheme = ggthemes::theme_fivethirtyeight(),
+  ggstatsplot.layer = FALSE,
+  messages = FALSE,
+  results.subtitle = FALSE,
+) + scale_y_continuous(breaks = c(-3,-2,-1,0,1,2,3))
+
+skimr::inline_hist(testC$RS_Pre_Prediction - testC$User_Bewertung, n_bins = 7)
+skimr::inline_hist(testC$RS_Post_Prediction - testC$User_Bewertung, n_bins = 5)
+table(testC$RS_Pre_Prediction - testC$User_Bewertung)
+table(testC$RS_Post_Prediction - testC$User_Bewertung)
+
+```
+
+```{r mrg_UBCF}
+test <- data_article_UBCF %>% group_by(ResponseId) %>% 
+                            gather(key = "Artikel", value ="User_Bewertung", loop1.1_1, loop1.2_1, loop1.3_1, loop1.4_1) %>% 
+                            gather(key = "Pre_Prediction", value = "RS_Pre_Prediction", pre_pred_A1_round, pre_pred_A2_round, pre_pred_A3_round, pre_pred_A4_round) %>% 
+                            mutate(Artikel = str_remove(Artikel, "loop1.")) %>% 
+                            mutate(Artikel = str_remove(Artikel, "_1")) %>% 
+                            mutate(Pre_Prediction = str_remove(Pre_Prediction, "pre_pred_A")) %>% 
+                            mutate(Pre_Prediction = str_remove(Pre_Prediction, "_round")) %>% 
+                            filter (Artikel == Pre_Prediction) %>% 
+                            select(ResponseId, Artikel, User_Bewertung, RS_Pre_Prediction)
+
+testB <- data_article_UBCF %>% group_by(ResponseId) %>% 
+                            gather(key = "Artikel", value ="User_Bewertung", loop1.1_1, loop1.2_1, loop1.3_1, loop1.4_1) %>% 
+                            gather(key = "Post_Prediction", value = "RS_Post_Prediction", post_pred_A1_round, post_pred_A2_round, post_pred_A3_round, post_pred_A4_round) %>%
+                            mutate(Artikel = str_remove(Artikel, "loop1.")) %>% 
+                            mutate(Artikel = str_remove(Artikel, "_1")) %>% 
+                            mutate(Post_Prediction = str_remove(Post_Prediction, "post_pred_A")) %>% 
+                            mutate(Post_Prediction = str_remove(Post_Prediction, "_round")) %>% 
+                            filter (Artikel == Post_Prediction) %>% 
+                            select(ResponseId, Artikel, User_Bewertung, RS_Post_Prediction)
+
+testC <- inner_join(test, testB, by = c("ResponseId","Artikel","User_Bewertung"))
+
+
+testD <- testC  %>%  
+  mutate(Abstand_Pretest = RS_Pre_Prediction - User_Bewertung) %>% 
+  mutate(Abstand_Posttest = RS_Post_Prediction - User_Bewertung) %>% 
+  mutate(ResponseId_Article = paste(ResponseId,Artikel,sep = "_")) %>% 
+  ungroup() %>% 
+  select(ResponseId_Article,Abstand_Pretest, Abstand_Posttest,Artikel) %>% 
+  #filter(Abstand_Pretest != Abstand_Posttest) %>% 
+  pivot_longer(cols = c(Abstand_Pretest , Abstand_Posttest), names_to = "Test", values_to = "Abstand")
+
+ggstatsplot::ggwithinstats(
+  data = testD,
+  x = Test,
+  y = Abstand,
+  title = "UBCF - Vergleich zwischen Pre- und Posttest",
+  xlab = "Empfehlungssystem",
+  ylab = "Abstand zwischen Vorhersage und Bewertung",
+  sort = "ascending", # ordering groups along the x-axis based on
+  sort.fun = mean, # values of `y` variable
+  pairwise.comparisons = T,
+  pairwise.display = "s",
+  mean.plotting = F,
+  #title = "SVD - Korrelation zwischen Vorhersage und Realwert",
+  #ggtheme = ggthemes::theme_fivethirtyeight(),
+  ggstatsplot.layer = FALSE,
+  messages = FALSE,
+  results.subtitle = FALSE,
+) + scale_y_continuous(breaks = seq(-3, 3, by = 1))
+
+testE <- testC  %>%  
+  mutate(Abstand_Pretest = RS_Pre_Prediction - User_Bewertung) %>% 
+  mutate(Abstand_Posttest = RS_Post_Prediction - User_Bewertung) %>% 
+  mutate(ResponseId_Article = paste(ResponseId,Artikel,sep = "_")) %>% 
+  ungroup() %>% 
+  select(ResponseId_Article,Abstand_Pretest, Abstand_Posttest,Artikel) %>% 
+  filter(Abstand_Pretest != Abstand_Posttest) %>% 
+  #filter((Abstand_Pretest > Abstand_Posttest & Abstand_Posttest >= 0)|(Abstand_Pretest < Abstand_Posttest & Abstand_Posttest <= 0)) %>% 
+  pivot_longer(cols = c(Abstand_Pretest , Abstand_Posttest), names_to = "Test", values_to = "Abstand")
+
+ggstatsplot::ggwithinstats(
+  data = testE,
+  x = Test,
+  y = Abstand,
+  title = "UBCF - Vergleich zwischen Pre- und Posttest",
+  xlab = "Empfehlungssystem",
+  ylab = "Abstand zwischen Vorhersage und Bewertung",
+  sort = "ascending", # ordering groups along the x-axis based on
+  sort.fun = mean, # values of `y` variable
+  pairwise.comparisons = T,
+  pairwise.display = "s",
+  mean.plotting = F,
+  #title = "SVD - Korrelation zwischen Vorhersage und Realwert",
+  #ggtheme = ggthemes::theme_fivethirtyeight(),
+  ggstatsplot.layer = FALSE,
+  messages = FALSE,
+  results.subtitle = FALSE,
+)  + scale_y_continuous(breaks = c(-3,-2,-1,0,1,2,3))
+
+skimr::inline_hist(testC$RS_Pre_Prediction - testC$User_Bewertung, n_bins = 7)
+skimr::inline_hist(testC$RS_Post_Prediction - testC$User_Bewertung, n_bins = 7)
+
+sum(testC$RS_Pre_Prediction != testC$RS_Post_Prediction)
+
+
+```
+
+

@@ -15,13 +15,19 @@ library(apastats)
 ```{r prediction_prepare, cache=TRUE}
 m <- read_feather("./ratings_comments.feather")  %>% as.data.frame() %>% as("realRatingMatrix")
 
+# Parameter for SVD
+REAL_SVD_param <- list(k = 10,                     ## rank of approximation
+                       maxiter    = 100,           ## max. number of SVD iterations
+                       normalize  = "center"       ## rows
+                       )
+
 # PostTrained
 post_rec_UBCF <- Recommender(m, method = "UBCF")
-post_rec_SVD <- Recommender(m, method = "SVD")
+post_rec_SVD <- Recommender(m, method = "SVD", parameter=REAL_SVD_param)
 
 # PreTrained
 pre_rec_UBCF <- Recommender(m[155:5560], method = "UBCF")
-pre_rec_SVD <- Recommender(m[155:5560], method = "SVD")
+pre_rec_SVD <- Recommender(m[155:5560], method = "SVD", parameter=REAL_SVD_param)
 
 # Create UBCF Prediction
 post_pred_UBCF <- recommenderlab::predict(post_rec_UBCF, m[1:154], type="ratingMatrix")
@@ -33,7 +39,7 @@ pre_pred_SVD <- recommenderlab::predict(pre_rec_SVD, m[1:154], type="ratingMatri
 ```
 ## UBCF
 ```{r accuracy_UBCF}
-data_article_UBCF <- data_cleaned  %>% select(ResponseId, starts_with("ID_A"), starts_with("loop1")) %>%  labelled::remove_labels() %>% labelled::remove_attributes(. , "display_width")
+data_article_UBCF <- data_cleaned  %>% select(ResponseId, starts_with("ID_A"), starts_with("loop1"), -starts_with("loop1_scale")) %>%  labelled::remove_labels() %>% labelled::remove_attributes(. , "display_width")
 
 tmp <- (as(post_pred_UBCF, "matrix"))
 post_pred_UBCF_matrix <- as.data.frame(tmp)
@@ -57,6 +63,7 @@ for (i in 1:length(data_article_UBCF$ResponseId)){
   tmp_post_pred_A3 <- post_pred_user %>% select(user$ID_A3) %>% as.numeric()
   tmp_post_pred_A4 <- post_pred_user %>% select(user$ID_A4) %>% as.numeric()
   tmp_pre_pred_A1 <- pre_pred_user %>% select(user$ID_A1) %>% as.numeric()
+  
   tmp_pre_pred_A2 <- pre_pred_user %>% select(user$ID_A2) %>% as.numeric()
   tmp_pre_pred_A3 <- pre_pred_user %>% select(user$ID_A3) %>% as.numeric()
   tmp_pre_pred_A4 <- pre_pred_user %>% select(user$ID_A4) %>% as.numeric()
@@ -112,14 +119,41 @@ Das unangelernte Empfehlungssystem hat jeden vierten Artikel richtig vorhergesag
 
 ```{r correlation_UBCF}
 # Correllation of UBCF Prediction
-data_article_UBCF %>% select(loop1.1_1, post_pred_A1) %>% psych::pairs.panels(hist.col="skyblue")
-data_article_UBCF %>% select(loop1.2_1, post_pred_A2) %>% psych::pairs.panels(hist.col="skyblue")
-data_article_UBCF %>% select(loop1.3_1, post_pred_A3) %>% psych::pairs.panels(hist.col="skyblue")
-data_article_UBCF %>% select(loop1.4_1, post_pred_A4) %>% psych::pairs.panels(hist.col="skyblue")
+
+## Pretest ##
+corr_UBCF_pre_pred <- data_article_UBCF %>%  select(starts_with("loop"), starts_with("pre")) %>% select(-ends_with("round"))
+corr_UBCF_pre_pred <- pivot_longer(corr_UBCF_pre_pred, cols = c(starts_with("loop")), names_to = "Durchgang_l", values_to = "Bewertung")
+corr_UBCF_pre_pred <- pivot_longer(corr_UBCF_pre_pred, cols = c(starts_with("pre")), names_to = "Durchgang_Pre", values_to = "Pre_Prediction")
+corr_UBCF_pre_pred <- corr_UBCF_pre_pred %>%   mutate(Durchgang_l = str_remove(Durchgang_l, "loop1.")) %>% 
+                                       mutate(Durchgang_l = str_remove(Durchgang_l, "_1")) %>% 
+                                       mutate(Durchgang_Pre = str_remove(Durchgang_Pre, "pre_pred_A")) %>% 
+                                       filter (Durchgang_l == Durchgang_Pre)
+
+# Gesamtkorrelation Pretest
+corr_UBCF_pre_pred %>%  select(Bewertung, Pre_Prediction) %>%  psych::pairs.panels(hist.col="skyblue")
+
+# Korrelation der einzelnen Artikel Pretest
 data_article_UBCF %>% select(loop1.1_1, pre_pred_A1) %>% psych::pairs.panels(hist.col="skyblue")
 data_article_UBCF %>% select(loop1.2_1, pre_pred_A2) %>% psych::pairs.panels(hist.col="skyblue")
 data_article_UBCF %>% select(loop1.3_1, pre_pred_A3) %>% psych::pairs.panels(hist.col="skyblue")
 data_article_UBCF %>% select(loop1.4_1, pre_pred_A4) %>% psych::pairs.panels(hist.col="skyblue")
+
+## Posttest ##
+corr_UBCF_post_pred <- data_article_UBCF %>%  select(starts_with("loop"), starts_with("post")) %>% select(-ends_with("round"))
+corr_UBCF_post_pred <- pivot_longer(corr_UBCF_post_pred, cols = c(starts_with("loop")), names_to = "Durchgang_l", values_to = "Bewertung")
+corr_UBCF_post_pred <- pivot_longer(corr_UBCF_post_pred, cols = c(starts_with("post")), names_to = "Durchgang_Post", values_to = "Post_Prediction")
+corr_UBCF_post_pred <- corr_UBCF_post_pred %>%   mutate(Durchgang_l = str_remove(Durchgang_l, "loop1.")) %>% 
+                                       mutate(Durchgang_l = str_remove(Durchgang_l, "_1")) %>% 
+                                       mutate(Durchgang_Post = str_remove(Durchgang_Post, "post_pred_A")) %>% 
+                                       filter (Durchgang_l == Durchgang_Post)
+# Gesamtkorrelation Pretest
+corr_UBCF_post_pred %>%  select(Bewertung, Post_Prediction) %>%  psych::pairs.panels(hist.col="skyblue",lm=T)
+
+# Korrelation der einzelnen Artikel Pretest
+data_article_UBCF %>% select(loop1.1_1, post_pred_A1) %>% psych::pairs.panels(hist.col="skyblue")
+data_article_UBCF %>% select(loop1.2_1, post_pred_A2) %>% psych::pairs.panels(hist.col="skyblue")
+data_article_UBCF %>% select(loop1.3_1, post_pred_A3) %>% psych::pairs.panels(hist.col="skyblue")
+data_article_UBCF %>% select(loop1.4_1, post_pred_A4) %>% psych::pairs.panels(hist.col="skyblue")
 ```
 
 ```{r correlation_per_User_UBCF, include=FALSE}
@@ -137,6 +171,8 @@ cor_post_UBCFRating_predictions <- mrg_post_UBCFRating_predictions %>%
   group_by(ResponseId) %>%
   mutate(cor_user_UBCF_post = cor(User_Bewertung, RS_Post_Prediction)) %>%
   summarise(cor_user_UBCF_post = mean(cor_user_UBCF_post))
+
+table(cor_post_UBCFRating_predictions$cor_user_UBCF_post)
 
 data_article_UBCF <- inner_join(data_article_UBCF, cor_post_UBCFRating_predictions, by="ResponseId") 
 
@@ -175,6 +211,9 @@ dist_pre_UBCFRating_predictions <- mrg_pre_UBCFRating_predictions %>%
 
 data_article_UBCF <- inner_join(data_article_UBCF, dist_pre_UBCFRating_predictions, by="ResponseId") 
 
+
+# Paired t-test absoluter Abstand
+describe.ttest(t.test(dist_pre_UBCFRating_predictions$user_pre_abstand_abs_UBCF, dist_post_UBCFRating_predictions$user_post_abstand_abs_UBCF, paired = T))
 #summary(data_article_UBCF$cor_user_UBCF_pre, na.rm = TRUE)
 #summary(data_article_UBCF$cor_user_UBCF_post, na.rm = TRUE)
 #summary(data_article_UBCF$user_pre_abstand_UBCF, na.rm = TRUE)
@@ -198,10 +237,90 @@ ggstatsplot::gghistostats(data_article_UBCF, user_post_abstand_abs_UBCF)
 
 Ein weiterer Indikator, dass sich die Qualität des UBCF Empfehlungssystems durch das Anlernen verbessert hat, ist die Korrelation zwischen den eigentlichen Bewertungen und den Vorhersagen des Systems. So gab es beim ungelernten System im durchschnitt nur eine leichte Korrelation zwischen den tatsächlichen und vorhergesagten Ergebnissen (`r describe.mean.sd(data_article_UBCF$cor_user_UBCF_pre)`). Beim angelernten System hingegen gab es überwiegend starke positive Korrelationen, was sich auch im Durchschnitt wiederspiegelt (`r describe.mean.sd(data_article_UBCF$cor_user_UBCF_post)`). Darüber hinaus ist auch der Abstand zwischen den tatsächlichen und vorhergesagten Werten im Vergleich zwischen dem unangelernten (`r describe.mean.sd(data_article_UBCF$user_pre_abstand_UBCF)`) und dem angelernten (`r describe.mean.sd(data_article_UBCF$user_post_abstand_UBCF)`) System gesunken. Auch dies zeigt, dass das System sich verbessert hat. 
 
+```{r gg_ubcf}
+gg_ubcf_cor <- data_article_UBCF %>% select(ResponseId, Pretest = cor_user_UBCF_pre, Posttest = cor_user_UBCF_post) %>% pivot_longer(cols = c(Pretest, Posttest), names_to = "RecSys", values_to = "correlation")
+
+ggstatsplot::ggwithinstats(
+  data = gg_ubcf_cor,
+  x = RecSys,
+  y = correlation,
+  xlab = "UBCF Empfehlungssystem",
+  ylab = "Korrelation zwischen Vorhersage und Realwert",
+  sort = "ascending", # ordering groups along the x-axis based on
+  sort.fun = median, # values of `y` variable
+  pairwise.comparisons = TRUE,
+  pairwise.display = "s",
+  pairwise.annotation = "p",
+  title = "UBCF - Unterschied Pre- und Posttest",
+  #ggtheme = ggthemes::theme_fivethirtyeight(),
+  ggstatsplot.layer = FALSE,
+  results.subtitle = FALSE,
+  messages = FALSE
+)
+```
+
+```{r mrg_UBCF}
+test <- data_article_UBCF %>% group_by(ResponseId) %>% 
+                            gather(key = "Artikel", value ="User_Bewertung", loop1.1_1, loop1.2_1, loop1.3_1, loop1.4_1) %>% 
+                            gather(key = "Pre_Prediction", value = "RS_Pre_Prediction", pre_pred_A1_round, pre_pred_A2_round, pre_pred_A3_round, pre_pred_A4_round) %>% 
+                            mutate(Artikel = str_remove(Artikel, "loop1.")) %>% 
+                            mutate(Artikel = str_remove(Artikel, "_1")) %>% 
+                            mutate(Pre_Prediction = str_remove(Pre_Prediction, "pre_pred_A")) %>% 
+                            mutate(Pre_Prediction = str_remove(Pre_Prediction, "_round")) %>% 
+                            filter (Artikel == Pre_Prediction) %>% 
+                            select(ResponseId, Artikel, User_Bewertung, RS_Pre_Prediction)
+
+testB <- data_article_UBCF %>% group_by(ResponseId) %>% 
+                            gather(key = "Artikel", value ="User_Bewertung", loop1.1_1, loop1.2_1, loop1.3_1, loop1.4_1) %>% 
+                            gather(key = "Post_Prediction", value = "RS_Post_Prediction", post_pred_A1_round, post_pred_A2_round, post_pred_A3_round, post_pred_A4_round) %>%
+                            mutate(Artikel = str_remove(Artikel, "loop1.")) %>% 
+                            mutate(Artikel = str_remove(Artikel, "_1")) %>% 
+                            mutate(Post_Prediction = str_remove(Post_Prediction, "post_pred_A")) %>% 
+                            mutate(Post_Prediction = str_remove(Post_Prediction, "_round")) %>% 
+                            filter (Artikel == Post_Prediction) %>% 
+                            select(ResponseId, Artikel, User_Bewertung, RS_Post_Prediction)
+
+testC <- inner_join(test, testB, by = c("ResponseId","Artikel","User_Bewertung"))
+
+
+testD <- testC  %>%  
+  mutate(Abstand_Pretest = RS_Pre_Prediction - User_Bewertung) %>% 
+  mutate(Abstand_Posttest = RS_Post_Prediction - User_Bewertung) %>% 
+  mutate(ResponseId_Article = paste(ResponseId,Artikel,sep = "_")) %>% 
+  ungroup() %>% 
+  select(ResponseId_Article,Abstand_Pretest, Abstand_Posttest,Artikel) %>% 
+  #filter(Abstand_Pretest != Abstand_Posttest) %>% 
+  pivot_longer(cols = c(Abstand_Pretest , Abstand_Posttest), names_to = "Test", values_to = "Abstand")
+
+ggstatsplot::ggwithinstats(
+  data = testD,
+  x = Test,
+  y = Abstand,
+  title = "UBCF - Vergleich zwischen Pre- und Posttest",
+  xlab = "Empfehlungssystem",
+  ylab = "Abstand zwischen Vorhersage und Bewertung",
+  sort = "ascending", # ordering groups along the x-axis based on
+  sort.fun = mean, # values of `y` variable
+  pairwise.comparisons = T,
+  pairwise.display = "s",
+  mean.plotting = F,
+  #title = "SVD - Korrelation zwischen Vorhersage und Realwert",
+  #ggtheme = ggthemes::theme_fivethirtyeight(),
+  ggstatsplot.layer = FALSE,
+  messages = FALSE,
+  results.subtitle = FALSE,
+) + scale_y_continuous(breaks = seq(-3, 3, by = 1))
+```
+
+Abweichung der Vorhersagen von den tatäschlichen Bewertungen als inline Histogramm
+
+- Pretest: (-3 `r skimr::inline_hist(testC$RS_Pre_Prediction - testC$User_Bewertung, n_bins = 7)` +3)
+- Posttest: (-3 `r  skimr::inline_hist(testC$RS_Post_Prediction - testC$User_Bewertung, n_bins = 7) ` +3)
+
 ## SVD
 
 ```{r accuracy_SVD}
-data_article_SVD <- data_cleaned  %>% select(ResponseId, starts_with("ID_B"), starts_with("loop2")) %>%  labelled::remove_labels() %>% labelled::remove_attributes(. , "display_width")
+data_article_SVD <- data_cleaned  %>% select(ResponseId, starts_with("ID_B"), starts_with("loop2"), -starts_with("loop2_scale")) %>%  labelled::remove_labels() %>% labelled::remove_attributes(. , "display_width")
 
 tmp <- (as(post_pred_SVD, "matrix"))
 post_pred_SVD_matrix <- as.data.frame(tmp)
@@ -278,14 +397,41 @@ Das unangelernte Empfehlungssystem hat jeden dritten Artikel richtig vorhergesag
 
 ```{r correlation_SVD}
 # Correllation of SVD Prediction
-data_article_SVD %>% select(loop2.1_1, post_pred_B1) %>% psych::pairs.panels(hist.col="skyblue")
-data_article_SVD %>% select(loop2.2_1, post_pred_B2) %>% psych::pairs.panels(hist.col="skyblue")
-data_article_SVD %>% select(loop2.3_1, post_pred_B3) %>% psych::pairs.panels(hist.col="skyblue")
-data_article_SVD %>% select(loop2.4_1, post_pred_B4) %>% psych::pairs.panels(hist.col="skyblue")
+
+## Pretest ##
+corr_SVD_pre_pred <- data_article_SVD %>%  select(starts_with("loop"), starts_with("pre")) %>% select(-ends_with("round"))
+corr_SVD_pre_pred <- pivot_longer(corr_SVD_pre_pred, cols = c(starts_with("loop")), names_to = "Durchgang_l", values_to = "Bewertung")
+corr_SVD_pre_pred <- pivot_longer(corr_SVD_pre_pred, cols = c(starts_with("pre")), names_to = "Durchgang_Pre", values_to = "Pre_Prediction")
+corr_SVD_pre_pred <- corr_SVD_pre_pred %>%   mutate(Durchgang_l = str_remove(Durchgang_l, "loop2.")) %>% 
+                                       mutate(Durchgang_l = str_remove(Durchgang_l, "_1")) %>% 
+                                       mutate(Durchgang_Pre = str_remove(Durchgang_Pre, "pre_pred_B")) %>% 
+                                       filter (Durchgang_l == Durchgang_Pre)
+
+# Gesamtkorrelation Pretest
+corr_SVD_pre_pred %>%  select(Bewertung, Pre_Prediction) %>%  psych::pairs.panels(hist.col="skyblue")
+
+# Korrelation der einzelnen Artikel Pretest
 data_article_SVD %>% select(loop2.1_1, pre_pred_B1) %>% psych::pairs.panels(hist.col="skyblue")
 data_article_SVD %>% select(loop2.2_1, pre_pred_B2) %>% psych::pairs.panels(hist.col="skyblue")
 data_article_SVD %>% select(loop2.3_1, pre_pred_B3) %>% psych::pairs.panels(hist.col="skyblue")
 data_article_SVD %>% select(loop2.4_1, pre_pred_B4) %>% psych::pairs.panels(hist.col="skyblue")
+
+## Posttest ##
+corr_SVD_post_pred <- data_article_SVD %>%  select(starts_with("loop"), starts_with("post")) %>% select(-ends_with("round"))
+corr_SVD_post_pred <- pivot_longer(corr_SVD_post_pred, cols = c(starts_with("loop")), names_to = "Durchgang_l", values_to = "Bewertung")
+corr_SVD_post_pred <- pivot_longer(corr_SVD_post_pred, cols = c(starts_with("post")), names_to = "Durchgang_Post", values_to = "Post_Prediction")
+corr_SVD_post_pred <- corr_SVD_post_pred %>%   mutate(Durchgang_l = str_remove(Durchgang_l, "loop2.")) %>% 
+                                       mutate(Durchgang_l = str_remove(Durchgang_l, "_1")) %>% 
+                                       mutate(Durchgang_Post = str_remove(Durchgang_Post, "post_pred_B")) %>% 
+                                       filter (Durchgang_l == Durchgang_Post)
+# Gesamtkorrelation Pretest
+corr_SVD_post_pred %>%  select(Bewertung, Post_Prediction) %>%  psych::pairs.panels(hist.col="skyblue",lm=T)
+
+# Korrelation der einzelnen Artikel Pretest
+data_article_SVD %>% select(loop2.1_1, post_pred_B1) %>% psych::pairs.panels(hist.col="skyblue")
+data_article_SVD %>% select(loop2.2_1, post_pred_B2) %>% psych::pairs.panels(hist.col="skyblue")
+data_article_SVD %>% select(loop2.3_1, post_pred_B3) %>% psych::pairs.panels(hist.col="skyblue")
+data_article_SVD %>% select(loop2.4_1, post_pred_B4) %>% psych::pairs.panels(hist.col="skyblue")
 ```
 
 ```{r correlation_per_User_SVD, include=FALSE}
@@ -342,6 +488,8 @@ dist_pre_SVDRating_predictions <- mrg_pre_SVDRating_predictions %>%
 
 data_article_SVD <- inner_join(data_article_SVD, dist_pre_SVDRating_predictions, by="ResponseId") 
 
+describe.ttest(t.test(dist_pre_SVDRating_predictions$user_pre_abstand_abs_SVD, dist_post_SVDRating_predictions$user_post_abstand_abs_SVD, paired = T))
+
 #summary(data_article_SVD$cor_user_SVD_pre, na.rm = TRUE)
 #summary(data_article_SVD$cor_user_SVD_post, na.rm = TRUE)
 #summary(data_article_SVD$user_pre_abstand_SVD, na.rm = TRUE)
@@ -363,3 +511,83 @@ ggstatsplot::gghistostats(data_article_SVD, user_pre_abstand_abs_SVD)
 ggstatsplot::gghistostats(data_article_SVD, user_post_abstand_abs_SVD)
 ```
 Ein weiterer Indikator, dass sich die Qualität des SVD Empfehlungssystems durch das Anlernen verbessert hat, ist die Korrelation zwischen den eigentlichen Bewertungen und den Vorhersagen des Systems. So gab es beim ungelernten System so viele positive wie auch negative Korrelationen, dass diese sich im Durchschnitt aufgehoben haben (`r describe.mean.sd(data_article_SVD$cor_user_SVD_pre)`). Beim angelernten System hingegen gab es überwiegend starke positive Korrelationen, was sich auch im Durchschnitt wiederspiegelt (`r describe.mean.sd(data_article_SVD$cor_user_SVD_post)`). Darüber hinaus ist auch der Abstand zwischen den tatsächlichen und vorhergesagten Werten im Vergleich zwischen dem unangelernten (`r describe.mean.sd(data_article_SVD$user_pre_abstand_SVD)`) und dem angelernten (`r describe.mean.sd(data_article_SVD$user_post_abstand_SVD)`) System gesunken. Auch dies zeigt, dass das System sich verbessert hat. 
+
+```{r gg_svd}
+gg_svd_cor <- data_article_SVD %>% select(ResponseId, Pretest = cor_user_SVD_pre, Posttest = cor_user_SVD_post) %>% pivot_longer(cols = c(Pretest, Posttest), names_to = "RecSys", values_to = "correlation")
+
+ggstatsplot::ggwithinstats(
+  data = gg_svd_cor,
+  x = RecSys,
+  y = correlation,
+  xlab = "Empfehlungssystem",
+  ylab = "Korrelation zwischen Vorhersage und Realwert",
+  sort = "ascending", # ordering groups along the x-axis based on
+  sort.fun = median, # values of `y` variable
+  pairwise.comparisons = TRUE,
+  pairwise.display = "s",
+  pairwise.annotation = "p",
+  title = "SVD - Vergleich zwischen Pre- und Posttest",
+  #ggtheme = ggthemes::theme_fivethirtyeight(),
+  ggstatsplot.layer = FALSE,
+  results.subtitle = FALSE,
+  messages = FALSE
+)
+```
+
+```{r mrg_svd}
+test <- data_article_SVD %>% group_by(ResponseId) %>% 
+                            gather(key = "Artikel", value ="User_Bewertung", loop2.1_1, loop2.2_1, loop2.3_1, loop2.4_1) %>% 
+                            gather(key = "Pre_Prediction", value = "RS_Pre_Prediction", pre_pred_B1_round, pre_pred_B2_round, pre_pred_B3_round, pre_pred_B4_round) %>% 
+                            mutate(Artikel = str_remove(Artikel, "loop2.")) %>% 
+                            mutate(Artikel = str_remove(Artikel, "_1")) %>% 
+                            mutate(Pre_Prediction = str_remove(Pre_Prediction, "pre_pred_B")) %>% 
+                            mutate(Pre_Prediction = str_remove(Pre_Prediction, "_round")) %>% 
+                            filter (Artikel == Pre_Prediction) %>% 
+                            select(ResponseId, Artikel, User_Bewertung, RS_Pre_Prediction)
+
+testB <- data_article_SVD %>% group_by(ResponseId) %>% 
+                            gather(key = "Artikel", value ="User_Bewertung", loop2.1_1, loop2.2_1, loop2.3_1, loop2.4_1) %>% 
+                            gather(key = "Post_Prediction", value = "RS_Post_Prediction", post_pred_B1_round, post_pred_B2_round, post_pred_B3_round, post_pred_B4_round) %>% 
+                            mutate(Artikel = str_remove(Artikel, "loop2.")) %>% 
+                            mutate(Artikel = str_remove(Artikel, "_1")) %>% 
+                            mutate(Post_Prediction = str_remove(Post_Prediction, "post_pred_B")) %>% 
+                            mutate(Post_Prediction = str_remove(Post_Prediction, "_round")) %>% 
+                            filter (Artikel == Post_Prediction) %>% 
+                            select(ResponseId, Artikel, User_Bewertung, RS_Post_Prediction)
+
+testC <- inner_join(test, testB, by = c("ResponseId","Artikel","User_Bewertung"))
+
+testD <- testC  %>%  
+  mutate(Abstand_Pretest = RS_Pre_Prediction - User_Bewertung) %>% 
+  mutate(Abstand_Posttest = RS_Post_Prediction - User_Bewertung) %>% 
+  mutate(ResponseId_Article = paste(ResponseId,Artikel,sep = "_")) %>% 
+  ungroup() %>% 
+  select(ResponseId_Article,Abstand_Pretest, Abstand_Posttest,Artikel) %>% 
+  #filter(Abstand_Pretest != Abstand_Posttest) %>% 
+  #filter((Abstand_Pretest > Abstand_Posttest & Abstand_Posttest >= 0)|(Abstand_Pretest < Abstand_Posttest & Abstand_Posttest <= 0)) %>% 
+  pivot_longer(cols = c(Abstand_Pretest , Abstand_Posttest), names_to = "Test", values_to = "Abstand")
+
+ggstatsplot::ggwithinstats(
+  data = testD,
+  x = Test,
+  y = Abstand,
+  title = "SVD - Vergleich zwischen Pre- und Posttest",
+  xlab = "Empfehlungssystem",
+  ylab = "Abstand zwischen Vorhersage und Bewertung",
+  sort = "ascending", # ordering groups along the x-axis based on
+  sort.fun = mean, # values of `y` variable
+  pairwise.comparisons = T,
+  pairwise.display = "s",
+  mean.plotting = F,
+  #title = "SVD - Korrelation zwischen Vorhersage und Realwert",
+  #ggtheme = ggthemes::theme_fivethirtyeight(),
+  ggstatsplot.layer = FALSE,
+  messages = FALSE,
+  results.subtitle = FALSE,
+)  + scale_y_continuous(breaks = c(-3,-2,-1,0,1,2,3))
+
+```
+Abweichung der Vorhersagen von den tatäschlichen Bewertungen als inline Histogramm
+
+- Pretest: (-3 `r skimr::inline_hist(testC$RS_Pre_Prediction - testC$User_Bewertung, n_bins = 7)` +3)
+- Posttest: (-2 `r  skimr::inline_hist(testC$RS_Post_Prediction - testC$User_Bewertung, n_bins = 5) ` +2)

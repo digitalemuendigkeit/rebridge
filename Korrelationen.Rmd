@@ -22,23 +22,42 @@ library(haven)
 library(apastats)
 ```
 
-## Korrelation Persönlichkeiten
-```{r cor_persoenlichkeit}
-data_bigFive %>% select(-ResponseId) %>% psych::pairs.panels(hist.col="skyblue", lm = T)
-```
 
+## Demografie
+```{r cor_einstellung}
 
-## Einschätzung Empfehlungssystem
-```{r cor_RS_einsch}
-cor_RS_einsch <- data_demograph %>%  
-                        select(ResponseId,age) %>% 
+cor_einstellung <- data_demograph %>%  
                         inner_join(., data_kut, by="ResponseId") %>% 
                         inner_join(., data_RS_trust, by="ResponseId") %>% 
-                        inner_join(., data_RS_einschaetzung, by="ResponseId") %>% 
+                        inner_join(., data_know_austria, by="ResponseId") %>% 
+                        select(-ResponseId, -age_grp, -gender)
+
+cor_einstellung %>% psych::pairs.panels(hist.col="skyblue", lm = T)
+cor_einstellung %>% psych::corr.test()
+```
+
+## Demografie & Persönlichkeit
+
+```{r cor_persoenlichkeit}
+cor_demograph_pers <- data_demograph %>%  
+                        inner_join(., data_bigFive, by="ResponseId") %>% 
+                        select(-ResponseId, -age_grp, -gender)
+
+cor_demograph_pers %>% psych::pairs.panels(hist.col="skyblue", lm = T)
+cor_demograph_pers %>%  psych::corr.test()
+```
+
+## Korrelation Persönlichkeit
+
+```{r cor_pers_einstellung}
+cor_pers_einst <- data_bigFive %>%  
+                        inner_join(., data_kut, by="ResponseId") %>% 
+                        inner_join(., data_RS_trust, by="ResponseId") %>% 
+                        inner_join(., data_know_austria, by="ResponseId") %>% 
                         select(-ResponseId)
-  
-cor_RS_einsch %>% psych::pairs.panels(hist.col="skyblue", lm = T)
-cor_RS_einsch %>% psych::corr.test()
+
+cor_pers_einst %>% psych::pairs.panels(hist.col="skyblue", lm = T)
+cor_pers_einst %>%  psych::corr.test()
 ```
 
 ## Anlernen
@@ -56,36 +75,61 @@ cor_RS_anlernen %>%  psych::corr.test()
 
 ## UBCF
 ```{r cor_UBCF}
-cor_UBCF <- data_demograph %>%  
-                        select(ResponseId,age) %>% 
-                        inner_join(., data_kut, by="ResponseId") %>% 
+mrg_einsch_UBCF <- data_RS_einschaetzung %>%  select(ResponseId,einsch_UBCF_1)
+
+cor_UBCF_demograph <- data_demograph %>%  
+                        select(ResponseId,age,school,education) %>% 
+                        inner_join(., mrg_einsch_UBCF, by="ResponseId") %>% 
+                        inner_join(., data_UBCF, by="ResponseId") %>% 
+                        select(-ResponseId)
+
+cor_UBCF_bigFive <- data_bigFive %>%  
+                        inner_join(., mrg_einsch_UBCF, by="ResponseId") %>% 
+                        inner_join(., data_UBCF, by="ResponseId") %>% 
+                        select(-ResponseId)
+
+cor_UBCF_einstell <- data_kut %>% 
                         inner_join(., data_RS_trust, by="ResponseId") %>% 
+                        inner_join(., data_know_austria, by="ResponseId") %>% 
+                        inner_join(., mrg_einsch_UBCF, by="ResponseId") %>% 
                         inner_join(., data_UBCF, by="ResponseId") %>% 
                         select(-ResponseId)
   
-cor_UBCF  %>%  psych::pairs.panels(hist.col="skyblue")
-cor_UBCF  %>%  psych::corr.test()
+cor_UBCF_einstell %>%  psych::corr.test()
 
 cor_UBCF_einsch <- data_RS_einschaetzung %>% 
                      inner_join(., data_UBCF, by="ResponseId") %>% 
                      select(-ResponseId)
 
-cor_UBCF_einsch  %>%  psych::pairs.panels(hist.col="skyblue", lm = T)
-cor_UBCF_einsch  %>%  psych::corr.test()
-
+# Korrelation zwischen den Bewertungen
+cor_UBCF_einsch  %>% select(UBCF_RS_bew, UBCF_ArticleReview_quality, UBCF_SUM_Artikel)  %>%  psych::pairs.panels(hist.col="skyblue", lm = T)
+cor_UBCF_einsch  %>% select(UBCF_RS_bew, einsch_UBCF_1, UBCF_ArticleReview_quality, UBCF_SUM_Artikel)  %>%   psych::corr.test()
 ```
 
 ## SVD
 ```{r cor_SVD}
-cor_SVD <- data_demograph %>%  
-                        select(ResponseId,age) %>% 
-                        inner_join(., data_kut, by="ResponseId") %>% 
-                        inner_join(., data_RS_trust, by="ResponseId") %>% 
+mrg_einsch_SVD <- data_RS_einschaetzung %>%  select(ResponseId,einsch_IBCF_1)
+
+cor_SVD_demograph <- data_demograph %>%  
+                        select(ResponseId,age,school,education) %>% 
+                        inner_join(., mrg_einsch_SVD, by="ResponseId") %>% 
                         inner_join(., data_SVD, by="ResponseId") %>% 
                         select(-ResponseId)
-  
-cor_SVD  %>%  psych::pairs.panels(hist.col="skyblue")
-cor_SVD  %>%  psych::corr.test()
+
+cor_SVD_bigFive <- data_bigFive %>%  
+                        inner_join(., mrg_einsch_SVD, by="ResponseId") %>% 
+                        inner_join(., data_SVD, by="ResponseId") %>% 
+                        select(-ResponseId)
+
+cor_SVD_einstell <- data_kut %>% 
+                        inner_join(., data_RS_trust, by="ResponseId") %>% 
+                        inner_join(., data_know_austria, by="ResponseId") %>% 
+                        inner_join(., mrg_einsch_SVD, by="ResponseId") %>% 
+                        inner_join(., data_SVD, by="ResponseId") %>% 
+                        select(-ResponseId)
+
+cor_SVD_bigFive  %>%  psych::corr.test()
+
 
 cor_SVD_einsch <- data_RS_einschaetzung %>% 
                      inner_join(., data_SVD, by="ResponseId") %>% 
@@ -93,6 +137,10 @@ cor_SVD_einsch <- data_RS_einschaetzung %>%
 
 cor_SVD_einsch  %>%  psych::pairs.panels(hist.col="skyblue", lm = T)
 cor_SVD_einsch  %>%  psych::corr.test()
+
+cor_SVD_einsch  %>% select(SVD_RS_bew, SVD_ArticleReview_quality, SVD_SUM_Artikel)  %>%  psych::pairs.panels(hist.col="skyblue", lm = T)
+cor_SVD_einsch  %>% select(SVD_RS_bew, einsch_IBCF_1, SVD_ArticleReview_quality, SVD_SUM_Artikel)  %>%   psych::corr.test()
+describe.mean.sd(cor_SVD_einsch$einsch_UBCF_1)
 ```
 
 ## Predictions UBCF
@@ -121,6 +169,7 @@ ggstatsplot::ggcorrmat(cor_pred_UBCF,
                        cor.vars.names = c("Neurotisch","Verträglichkeit","Extraversion","Gewissenhaftigkeit","Offenheit","Korrelation Pretest", "Korrelation Posttest","Abstand Pretest","Abstand Posttest"),
                        hc.order = T)
 ```
+
 ## Predictions SVD
 
 ```{r cor_predictions_SVD}

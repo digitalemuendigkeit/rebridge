@@ -1,7 +1,7 @@
 ---
 title: "Auswertung Masterarbeit"
 author: "Stefan Ahlers"
-date: "11/5/2019"
+date: "23. Dezember 2019"
 output:
   html_document: 
     toc: true
@@ -17,9 +17,9 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(haven)
-#library(sjPlot)
-#library(sjlabelled)
-#library(kableExtra)
+library(sjPlot)
+library(sjlabelled)
+library(kableExtra)
 library(knitr)
 options(digits=2) # zwei Nachkommastellen
 library(apastats)
@@ -33,16 +33,16 @@ library(apastats)
 ```{r child = 'data_reliability.Rmd'}
 ```
 
-# Test auf Normalverteilung
-```{r child = 'Normalverteilung.Rmd'}
-```
-
 # Stichprobenbeschreibung
 ```{r child = 'Stichprobenbeschreibung.Rmd'}
 ```
 
 # Prediction
 ```{r child = 'Predictions.Rmd'}
+```
+
+# Auswertung Gender & Topic
+```{r child = 'Auswertung-Nominal.Rmd'}
 ```
 
 # Korrelationen

@@ -23,7 +23,7 @@ library(apastats)
 ```
 
 <!--- Läd die Daten und speichert sie in "raw" -->
-```{r read_data, cache=TRUE}
+```{r read_data}
 raw <- read_sav(file= "data/191118-data.sav")
 ```
 
@@ -32,18 +32,53 @@ raw <- read_sav(file= "data/191118-data.sav")
 TODO: O-Sterne Bewertungen in 1-Sterne Bewertungen umformatieren.
 
 -->
-```{r cleaning, cache=TRUE}
+```{r cleaning}
 data_cleaned <- raw %>% filter(Progress == 100) %>%    select(-StartDate,-EndDate,-Status,-IPAddress,-Duration__in_seconds_,-Progress,-Finished,-RecordedDate,-RecipientEmail,-RecipientFirstName,-RecipientLastName,-ExternalReference,-LocationLatitude,-LocationLongitude,-DistributionChannel,-UserLanguage,-ResponseID.0,-age.0,-gender.0,-topic,-randomTopicQuestion,-title,-body,-itemID,-subtitle,-date,-recsys,-rating,-iteration)  # Es werden nur die vollständigen Datensätze ausgewertet; überflüssige Spalten entfernt
 
 # Cleanup Zero Ratings
-data_cleaned$loop1.1_1<-recode(data_cleaned$loop1.1_1, `0` = 1)
-data_cleaned$loop1.2_1<-recode(data_cleaned$loop1.2_1, `0` = 1)
-data_cleaned$loop1.3_1<-recode(data_cleaned$loop1.3_1, `0` = 1)
-data_cleaned$loop1.4_1<-recode(data_cleaned$loop1.4_1, `0` = 1)
-data_cleaned$loop2.1_1<-recode(data_cleaned$loop2.1_1, `0` = 1)
-data_cleaned$loop2.2_1<-recode(data_cleaned$loop2.2_1, `0` = 1)
-data_cleaned$loop2.3_1<-recode(data_cleaned$loop2.3_1, `0` = 1)
-data_cleaned$loop2.4_1<-recode(data_cleaned$loop2.4_1, `0` = 1)
+data_cleaned$Anlernen1_1<-dplyr::recode(data_cleaned$Anlernen1_1, `0` = 1)
+data_cleaned$Anlernen2_1<-dplyr::recode(data_cleaned$Anlernen2_1, `0` = 1)
+data_cleaned$Anlernen3_1<-dplyr::recode(data_cleaned$Anlernen3_1, `0` = 1)
+data_cleaned$Anlernen4_1<-dplyr::recode(data_cleaned$Anlernen4_1, `0` = 1)
+data_cleaned$Anlernen5_1<-dplyr::recode(data_cleaned$Anlernen5_1, `0` = 1)
+data_cleaned$Anlernen6_1<-dplyr::recode(data_cleaned$Anlernen6_1, `0` = 1)
+data_cleaned$Anlernen7_1<-dplyr::recode(data_cleaned$Anlernen7_1, `0` = 1)
+
+
+data_cleaned$loop1.1_1<-dplyr::recode(data_cleaned$loop1.1_1, `0` = 1)
+data_cleaned$loop1.2_1<-dplyr::recode(data_cleaned$loop1.2_1, `0` = 1)
+data_cleaned$loop1.3_1<-dplyr::recode(data_cleaned$loop1.3_1, `0` = 1)
+data_cleaned$loop1.4_1<-dplyr::recode(data_cleaned$loop1.4_1, `0` = 1)
+data_cleaned$loop2.1_1<-dplyr::recode(data_cleaned$loop2.1_1, `0` = 1)
+data_cleaned$loop2.2_1<-dplyr::recode(data_cleaned$loop2.2_1, `0` = 1)
+data_cleaned$loop2.3_1<-dplyr::recode(data_cleaned$loop2.3_1, `0` = 1)
+data_cleaned$loop2.4_1<-dplyr::recode(data_cleaned$loop2.4_1, `0` = 1)
+
+# Scale from 1-5 to 1-6 for better comparison
+data_cleaned$Anlernen_scale1_1<-dplyr::recode(data_cleaned$Anlernen1_1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+data_cleaned$Anlernen_scale2_1<-dplyr::recode(data_cleaned$Anlernen2_1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+data_cleaned$Anlernen_scale3_1<-dplyr::recode(data_cleaned$Anlernen3_1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+data_cleaned$Anlernen_scale4_1<-dplyr::recode(data_cleaned$Anlernen4_1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+data_cleaned$Anlernen_scale5_1<-dplyr::recode(data_cleaned$Anlernen5_1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+data_cleaned$Anlernen_scale6_1<-dplyr::recode(data_cleaned$Anlernen6_1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+data_cleaned$Anlernen_scale7_1<-dplyr::recode(data_cleaned$Anlernen7_1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+
+
+data_cleaned$loop1_scale.1_1<-dplyr::recode(data_cleaned$loop1.1_1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+data_cleaned$loop1_scale.2_1<-dplyr::recode(data_cleaned$loop1.2_1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+data_cleaned$loop1_scale.3_1<-dplyr::recode(data_cleaned$loop1.3_1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+data_cleaned$loop1_scale.4_1<-dplyr::recode(data_cleaned$loop1.4_1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+data_cleaned$loop2_scale.1_1<-dplyr::recode(data_cleaned$loop2.1_1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+data_cleaned$loop2_scale.2_1<-dplyr::recode(data_cleaned$loop2.2_1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+data_cleaned$loop2_scale.3_1<-dplyr::recode(data_cleaned$loop2.3_1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+data_cleaned$loop2_scale.4_1<-dplyr::recode(data_cleaned$loop2.4_1, `2` = 2.25, `3` = 3.5, `4` = 4.75, `5` = 6)
+
+# Interviere Relevanz
+data_cleaned$Anlernen_ArticleReview_relevance <- data_cleaned$Anlernen_ArticleReview_relevance %>% sjlabelled::remove_all_labels()
+data_cleaned$SVD_ArticleReview_relevance <- data_cleaned$SVD_ArticleReview_relevance %>% sjlabelled::remove_all_labels()
+
+data_cleaned$Anlernen_ArticleReview_relevance<-dplyr::recode(data_cleaned$Anlernen_ArticleReview_relevance, `6` = 1, `5` = 2, `4` = 3, `3` = 4, `2` = 5, `1` = 6)
+data_cleaned$SVD_ArticleReview_relevance<-dplyr::recode(data_cleaned$SVD_ArticleReview_relevance, `6` = 1, `5` = 2, `4` = 3, `3` = 4, `2` = 5, `1` = 6)
 ```
 
 ```{r data_split}
@@ -95,7 +130,6 @@ data_demograph <- data_demograph %>%  select(-school_5_TEXT, -education_6_TEXT)
 ```{r topic_no_answer}
 data_topicSelect$interestingTopic[is.na(data_topicSelect$interestingTopic)] <-9
 ```
- 
 
 
 

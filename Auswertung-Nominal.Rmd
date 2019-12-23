@@ -1,0 +1,84 @@
+---
+title: "Auswertung-Nominal"
+author: "Stefan Ahlers"
+date: "12/5/2019"
+output:
+  html_document: 
+    toc: true
+    toc_float: true
+    code_folding : hide
+    df_print : paged
+  pdf_document: 
+    keep_tex: true
+---
+
+```{r setup_nom, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Auswertung Geschlecht
+```{r sex}
+## Gender x Topic
+mrg_topic_ohne7_gender  <- inner_join(data_topicSelect, data_demograph, by="ResponseId") %>% filter(interestingTopic != 7) # nur zwei Leute für Thema 7, keine Auswertung sinnvoll
+
+chisq.test(table(mrg_topic_ohne7_gender$gender, mrg_topic_ohne7_gender$interestingTopic)) # TREFFER!!
+table(mrg_topic_ohne7_gender$interestingTopic, mrg_topic_ohne7_gender$gender)
+## Gender x UBCF
+chisq.test(table(data_demograph$gender, data_UBCF$UBCF_ArticleReview_diversity)) # kein Zusammenhang
+chisq.test(table(data_demograph$gender, data_UBCF$UBCF_ArticleReview_novelty)) # kein Zusammenhang
+chisq.test(table(data_demograph$gender, data_UBCF$UBCF_ArticleReview_serendipity)) # kein Zusammenhang
+chisq.test(table(data_demograph$gender, data_UBCF$UBCF_ArticleReview_quality)) # ZUSAMMENHANG
+chisq.test(table(data_demograph$gender, data_UBCF$UBCF_SUM_Artikel)) # kein Zusammenhang
+chisq.test(table(data_demograph$gender, data_UBCF$UBCF_RS_bew)) # kein Zusammenhang
+
+# Gender x Quality
+apastats::describe.chi(table(data_demograph$gender, data_UBCF$UBCF_ArticleReview_quality), type = "latex")
+mrg_gender_UBCF <- data_demograph %>% select(ResponseId, gender) %>%  inner_join(., data_UBCF, by="ResponseId") 
+mrg_gender_UBCF %>% filter(gender == 1) %>% select(UBCF_ArticleReview_quality) %>%describe.mean.sd()
+mrg_gender_UBCF %>% filter(gender == 2) %>% select(UBCF_ArticleReview_quality) %>%describe.mean.sd()
+
+## Gender x SVD
+chisq.test(table(data_demograph$gender, data_SVD$SVD_ArticleReview_diversity)) # kein Zusammenhang
+chisq.test(table(data_demograph$gender, data_SVD$SVD_ArticleReview_novelty)) # kein Zusammenhang
+chisq.test(table(data_demograph$gender, data_SVD$SVD_ArticleReview_serendipity)) # kein Zusammenhang
+chisq.test(table(data_demograph$gender, data_SVD$SVD_ArticleReview_quality)) # kein Zusammenhang
+chisq.test(table(data_demograph$gender, data_SVD$SVD_SUM_Artikel)) # kein Zusammenhang
+chisq.test(table(data_demograph$gender, data_SVD$SVD_RS_bew)) # kein Zusammenhang
+```
+## Auswertung Themenwahl
+```{r topic}
+## Topic x UBCF
+mrg_topic_UBCF <- inner_join(data_topicSelect, data_UBCF, by="ResponseId") %>% filter(interestingTopic != 7)
+
+chisq.test(table(mrg_topic_UBCF$interestingTopic, mrg_topic_UBCF$UBCF_ArticleReview_diversity)) # ZUSAMMENHANG
+chisq.test(table(mrg_topic_UBCF$interestingTopic, mrg_topic_UBCF$UBCF_ArticleReview_novelty)) # Kein Zusammenhang
+chisq.test(table(mrg_topic_UBCF$interestingTopic, mrg_topic_UBCF$UBCF_ArticleReview_serendipity)) # kein Zusammenhang
+chisq.test(table(mrg_topic_UBCF$interestingTopic, mrg_topic_UBCF$UBCF_ArticleReview_quality)) # kein Zusammenhang
+chisq.test(table(mrg_topic_UBCF$interestingTopic, mrg_topic_UBCF$UBCF_SUM_Artikel)) # kein Zusammenhang
+chisq.test(table(mrg_topic_UBCF$interestingTopic, mrg_topic_UBCF$UBCF_RS_bew)) # kein Zusammenhang
+
+# Topic x Novelty
+apastats::describe.chi(table(mrg_topic_UBCF$interestingTopic, mrg_topic_UBCF$UBCF_ArticleReview_novelty))
+
+# Topic x Quality
+aggregate(mrg_topic_UBCF$UBCF_ArticleReview_diversity, by=list(mrg_topic_UBCF$interestingTopic), FUN=mean)
+aggregate(mrg_topic_UBCF$UBCF_ArticleReview_diversity, by=list(mrg_topic_UBCF$interestingTopic), FUN=sd.round )
+
+describe.mean.sd(mrg_topic_UBCF$UBCF_ArticleReview_diversity)
+skimr::inline_hist(mrg_topic_UBCF$interestingTopic,n_bins = 9)
+
+## Topic x SVD
+mrg_topic_SVD <- inner_join(data_topicSelect, data_SVD, by="ResponseId")
+
+chisq.test(table(mrg_topic_SVD$interestingTopic, mrg_topic_SVD$SVD_ArticleReview_diversity)) # kein Zusammenhang
+chisq.test(table(mrg_topic_SVD$interestingTopic, mrg_topic_SVD$SVD_ArticleReview_novelty)) # kein Zusammenhang
+chisq.test(table(mrg_topic_SVD$interestingTopic, mrg_topic_SVD$SVD_ArticleReview_serendipity)) # kein Zusammenhang
+chisq.test(table(mrg_topic_SVD$interestingTopic, mrg_topic_SVD$SVD_ArticleReview_quality)) # kein Zusammenhang
+chisq.test(table(mrg_topic_SVD$interestingTopic, mrg_topic_SVD$SVD_ArticleReview_relevance)) # kein Zusammenhang
+chisq.test(table(mrg_topic_SVD$interestingTopic, mrg_topic_SVD$SVD_SUM_Artikel)) # kein Zusammenhang
+chisq.test(table(mrg_topic_SVD$interestingTopic, mrg_topic_SVD$SVD_RS_bew)) # kein Zusammenhang
+
+aggregate(mrg_topic_SVD$SVD_ArticleReview_quality, by=list(mrg_topic_SVD$interestingTopic), FUN=sd.round)
+describe.mean.sd(mrg_topic_SVD$SVD_ArticleReview_quality)
+```
