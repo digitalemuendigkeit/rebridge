@@ -1,0 +1,51 @@
+---
+title: "We will see"
+description: |
+  A new article created using the Distill format.
+author:
+  - name: Anonymous
+    url: https://example.com/norajones
+    affiliation: Spacely Sprockets
+    affiliation_url: https://example.com/spacelysprokets
+date: "`r Sys.Date()`"
+output: distill::distill_article
+---
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(haven)
+library(sjPlot)
+library(sjlabelled)
+library(kableExtra)
+library(knitr)
+options(digits = 2) # zwei Nachkommastellen
+library(apastats)
+```
+
+```{r read_data}
+
+data_cleaned <- read_rds(file = here::here("data", "data_cleaned.rds"))
+data_demograph <- read_rds(file = here::here("data", "data_demograph.rds"))
+data_know_austria <- read_rds(file = here::here("data", "data_know_austria.rds"))
+data_newsConsum <- read_rds(file = here::here("data", "data_newsConsum.rds"))
+data_publishing <- read_rds(file = here::here("data", "data_publishing.rds"))
+data_RS_einschaetzung <- read_rds(file = here::here("data", "data_RS_einschaetzung.rds"))
+data_topicSelect <- read_rds(file = here::here("data", "data_topicSelect.rds"))
+
+```
+
+
+
+# Skalen Reliabilität
+```{r child = '00_reliability_analysis.Rmd', eval=TRUE}
+```
+
+
+
+
+
+
+
+
+

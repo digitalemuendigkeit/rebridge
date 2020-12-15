@@ -298,6 +298,8 @@ Zwischen den Geschlechtern besteht nur bei der Nutzung von regionalen ein signif
 ## Themenauswahl
 
 ```{r topic_graph}
+
+# PROBLEM
 # Finde alle NA und ersetzte NA durch 9 
 h <- data_topicSelect  %>% ggplot(aes(x = interestingTopic,
                                y = ..prop..,
@@ -461,7 +463,8 @@ g <- ggstatsplot::ggbetweenstats(data =mrg_data_empf_gen,
 # Kein Unterschied zwischen den Geschlechtern erkennbar
 
 gridExtra::grid.arrange(g,h, layout_matrix = rbind(c(1,2)))
-
+g
+h
 ```
 
 Die Befragten schätzen die Genauigkeit der Empfehlungssysteme folgendermaßen ein (Angaben in %):

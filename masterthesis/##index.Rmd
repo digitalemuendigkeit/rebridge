@@ -21,30 +21,30 @@ library(sjPlot)
 library(sjlabelled)
 library(kableExtra)
 library(knitr)
-options(digits=2) # zwei Nachkommastellen
+options(digits = 2) # zwei Nachkommastellen
 library(apastats)
 ```
 
 # Daten laden und bereinigen
-```{r child = 'data_preparation.Rmd'}
+```{r child = 'data_preparation.Rmd', eval=TRUE}
 ```
 
 # Skalen Reliabilität
-```{r child = 'data_reliability.Rmd'}
+```{r child = 'data_reliability.Rmd', eval=TRUE}
 ```
 
 # Stichprobenbeschreibung
-```{r child = 'Stichprobenbeschreibung.Rmd'}
+```{r child = 'Stichprobenbeschreibung.Rmd', eval=TRUE}
 ```
 
 # Prediction
-```{r child = 'Predictions.Rmd'}
+```{r child = 'Predictions.Rmd', eval=TRUE}
 ```
 
 # Auswertung Gender & Topic
-```{r child = 'Auswertung-Nominal.Rmd'}
+```{r child = 'Auswertung-Nominal.Rmd', eval=TRUE}
 ```
 
 # Korrelationen
-```{r child = 'Korrelationen.Rmd'}
+```{r child = 'Korrelationen.Rmd', eval=TRUE}
 ```

@@ -1,0 +1,186 @@
+---
+title: "Data Preparation"
+author: "Stefan Ahlers"
+date: "13 11 2019"
+output:
+  html_document: 
+    toc: true
+    toc_float: true
+    code_folding : hide
+    df_print : paged
+  pdf_document: default
+---
+
+```{r setupPre, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(haven)
+library(sjlabelled)
+#library(kableExtra)
+#library(knitr)
+library(apastats)
+library(magrittr)
+```
+
+<!--- Läd die Daten und speichert sie in "raw" -->
+```{r read_data}
+raw <- read_sav(file = here::here("rawdata", "191118-data.sav")) # filename contains the date
+```
+
+<!--- Bereinigt den Datensatz und speichert ihn in "data_cleaned" -
+
+TODO: O-Sterne Bewertungen in 1-Sterne Bewertungen umformatieren.
+
+-->
+```{r cleaning}
+data_cleaned <- raw %>% filter(Progress == 100) %>%    select(-StartDate,-EndDate,-Status,-IPAddress,-Duration__in_seconds_,-Progress,-Finished,-RecordedDate,-RecipientEmail,-RecipientFirstName,-RecipientLastName,-ExternalReference,-LocationLatitude,-LocationLongitude,-DistributionChannel,-UserLanguage,-ResponseID.0,-age.0,-gender.0,-topic,-randomTopicQuestion,-title,-body,-itemID,-subtitle,-date,-recsys,-rating,-iteration)  # Es werden nur die vollständigen Datensätze ausgewertet; überflüssige Spalten entfernt
+
+
+
+# Change 0 values to 1 incorrectly coded in Qualtrics
+cleanupzero <- function(x) {
+  dplyr::recode(x, `0` = 1)
+}
+
+# Scale from 1-5 to 1-6 for better comparison
+recodefive2six <- function(x) {
+  recode(
+   x,
+    `2` = 2.25,
+    `3` = 3.5,
+    `4` = 4.75,
+    `5` = 6
+  )
+}
+
+
+```
+
+
+```{r cleaning_zeros}
+# Cleanup Zero Ratings
+
+# removed scale from variable label here
+data_cleaned %<>% 
+  mutate_at(vars(matches("Anlernen[0-9]_1")), cleanupzero) %>% 
+  mutate_at(vars(matches("loop")), cleanupzero) %>%  
+  mutate_at(vars(matches("Anlernen[0-9]_1")), recodefive2six) %>% 
+  mutate_at(vars(matches("loop")), recodefive2six)
+
+```
+
+
+```{r cleaning_flip_relevance}
+
+flip_remove <- function(x) {
+  x %>% sjlabelled::remove_all_labels() %>% 
+    dplyr::recode( `6` = 1,
+    `5` = 2,
+    `4` = 3,
+    `3` = 4,
+    `2` = 5,
+    `1` = 6)
+}
+
+
+# test function for mutate_at procedures, does nothing
+noop <- function(x) {
+  x
+}
+
+data_cleaned %<>% mutate_at(vars("Anlernen_ArticleReview_relevance", "SVD_ArticleReview_relevance"), flip_remove)
+
+
+```
+
+```{r data_split}
+# Einzeltabellen gegliedert nach Themenbereich
+data_demograph <-
+  data_cleaned %>% select(ResponseId,
+                          gender,
+                          age,
+                          school,
+                          school_5_TEXT,
+                          education,
+                          education_6_TEXT,
+  ) # extrahiert die demographischen Daten
+data_newsConsum <-
+  data_cleaned %>% select(ResponseId, starts_with("news"))
+data_topicSelect <-
+  data_cleaned %>% select(ResponseId, interestingTopic)
+data_publishing <-
+  data_cleaned %>% select(
+    ResponseId,
+    RS_thema,
+    RS_gelesene_artikel,
+    RS_hobby,
+    RS_demograph,
+    RS_standort,
+    RS_politik,
+    RS_politik,
+    RS_religion
+  )
+data_RS_einschaetzung <-
+  data_cleaned %>% select(ResponseId, starts_with("einsch"))
+data_know_austria <-
+  data_cleaned %>% select(ResponseId, knowledge_austria)
+
+```
+
+```{r age_group}
+# Alter der Probanden gruppiert #
+#   <= 21 Jahre → Gruppe 1      #
+# 22 - 35 Jahre → Gruppe 2      #
+# 36 - 50 Jahre → Gruppe 3      #
+# 50 - 64 Jahre → Gruppe 5      # 
+#    > 65 Jahre → Gruppe 6      #
+
+data_demograph <- data_demograph %>% mutate(age_grp = case_when(age < 22 ~ 1, 
+                                                                age  < 35 ~ 2,
+                                                                age  < 50 ~ 3,
+                                                                age  < 65 ~ 4,
+                                                                age >= 65 ~ 5))
+```
+
+```{r manual_school_cleanup , include=FALSE}
+#verify no missing education information
+data_demograph %>% filter(school == 5)
+data_demograph %>% filter(education == 6)
+
+# Zuordnung der sonstigen Angaben
+tmp <- remove_all_labels(data_demograph) 
+tmp$school[data_demograph$ResponseId == "R_2wG3MUQ33RHKqke"] <- as.double("3") # Technischer Angestellter -> kein Abi
+tmp$school[data_demograph$ResponseId == "R_06zkMiYVH33j8fD"] <- as.double("4") # Hochschulstudium -> hat Abi
+tmp$school[data_demograph$ResponseId == "R_TtswfrNswLLAHMB"] <- as.double("3") # Fachoberschulreife -> mittlerer Schulabschluss
+tmp$school[data_demograph$ResponseId == "R_2vlfC53odvSCuYm"] <- as.double("4") # Bachelor -> hat Abi
+tmp$school[data_demograph$ResponseId == "R_21HdjqR5JfT8uzE"] <- as.double("3") # Höhere Handelsschule -> mittlerer Schulabschluss
+tmp$education[data_demograph$ResponseId == "R_3k5qjyWf0sl4Z4z"] <- as.double("4") # Fachhochschule
+tmp$education[data_demograph$ResponseId == "R_3p9n1RVYPPq3t8B"] <- as.double("2") # Fachwirt
+tmp$education[data_demograph$ResponseId == "R_2wG3MUQ33RHKqke"] <- as.double("2") # REFA Fachmann
+tmp$education[data_demograph$ResponseId == "R_3knDixnauuClcH0"] <- as.double("2") # Betriebswirt
+tmp$education[data_demograph$ResponseId == "R_3oA6FNzoOfh0xEB"] <- as.double("1") # Abi, kein Studium -> Studium noch nicht abgeschlossen
+data_demograph <-  copy_labels(tmp , data_demograph)
+rm(tmp)
+data_demograph <- data_demograph %>%  select(-school_5_TEXT, -education_6_TEXT)
+```
+
+```{r topic_no_answer}
+data_topicSelect$interestingTopic[is.na(data_topicSelect$interestingTopic)] <- 9
+```
+
+
+```{r}
+
+write_rds(data_cleaned, file = here::here("data", "data_cleaned.rds"))
+write_rds(data_demograph, file = here::here("data", "data_demograph.rds"))
+write_rds(data_know_austria, file = here::here("data", "data_know_austria.rds"))
+write_rds(data_newsConsum, file = here::here("data", "data_newsConsum.rds"))
+write_rds(data_publishing, file = here::here("data", "data_publishing.rds"))
+write_rds(data_RS_einschaetzung, file = here::here("data", "data_RS_einschaetzung.rds"))
+write_rds(data_topicSelect, file = here::here("data", "data_topicSelect.rds"))
+
+
+```
+
+
+

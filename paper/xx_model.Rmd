@@ -1,0 +1,22 @@
+```{r}
+
+bigfive <- constructs(composite("openness", c("bigFive_off_neg", "bigFive_off_pos")),
+                      composite("conscientiuousness", c("bigFive_gew_neg", "bigFive_gew_pos")),
+                      composite("extraversion",  c("bigFive_ext_neg", "bigFive_ext_pos")),
+                      composite("agreeableness",  c("bigFive_ver_pos", "bigFive_ver_neg")),
+                      composite("neuroticism", c("bigFive_neu_pos", "bigFive_neu_neg")))
+
+
+sm <- relationships(seminr::paths(from = c("neuroticism"), 
+                                  to = c("conscientiuousness",
+                                           "extraversion", "agreeableness", 
+                                           "openness")
+                                    ))
+
+model <- estimate_pls(rel_big, bigfive, structural_model = sm)
+
+summary(model)
+
+
+```
+
