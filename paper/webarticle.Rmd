@@ -19,7 +19,7 @@ library(sjPlot)
 library(sjlabelled)
 library(kableExtra)
 library(knitr)
-options(digits = 2) # zwei Nachkommastellen
+options(digits = 2) # zwei Nachkommastellen 
 library(apastats)
 ```
 
