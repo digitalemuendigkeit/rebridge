@@ -12,25 +12,49 @@ knitr::opts_chunk$set(echo = TRUE)
 Test
 
 ```{r mrg_UBCF}
-test <- data_article_UBCF %>% group_by(ResponseId) %>% 
-                            gather(key = "Artikel", value ="User_Bewertung", loop1.1_1, loop1.2_1, loop1.3_1, loop1.4_1) %>% 
-                            gather(key = "Pre_Prediction", value = "RS_Pre_Prediction", pre_pred_A1_round, pre_pred_A2_round, pre_pred_A3_round, pre_pred_A4_round) %>% 
-                            mutate(Artikel = str_remove(Artikel, "loop1.")) %>% 
-                            mutate(Artikel = str_remove(Artikel, "_1")) %>% 
-                            mutate(Pre_Prediction = str_remove(Pre_Prediction, "pre_pred_A")) %>% 
-                            mutate(Pre_Prediction = str_remove(Pre_Prediction, "_round")) %>% 
-                            filter (Artikel == Pre_Prediction) %>% 
-                            select(ResponseId, Artikel, User_Bewertung, RS_Pre_Prediction)
+test <- data_article_UBCF %>% group_by(ResponseId) %>%
+  gather(key = "Artikel",
+         value = "User_Bewertung",
+         loop1.1_1,
+         loop1.2_1,
+         loop1.3_1,
+         loop1.4_1) %>%
+  gather(
+    key = "Pre_Prediction",
+    value = "RS_Pre_Prediction",
+    pre_pred_A1_round,
+    pre_pred_A2_round,
+    pre_pred_A3_round,
+    pre_pred_A4_round
+  ) %>%
+  mutate(Artikel = str_remove(Artikel, "loop1.")) %>%
+  mutate(Artikel = str_remove(Artikel, "_1")) %>%
+  mutate(Pre_Prediction = str_remove(Pre_Prediction, "pre_pred_A")) %>%
+  mutate(Pre_Prediction = str_remove(Pre_Prediction, "_round")) %>%
+  filter(Artikel == Pre_Prediction) %>%
+  select(ResponseId, Artikel, User_Bewertung, RS_Pre_Prediction)
 
-testB <- data_article_UBCF %>% group_by(ResponseId) %>% 
-                            gather(key = "Artikel", value ="User_Bewertung", loop1.1_1, loop1.2_1, loop1.3_1, loop1.4_1) %>% 
-                            gather(key = "Post_Prediction", value = "RS_Post_Prediction", post_pred_A1_round, post_pred_A2_round, post_pred_A3_round, post_pred_A4_round) %>%
-                            mutate(Artikel = str_remove(Artikel, "loop1.")) %>% 
-                            mutate(Artikel = str_remove(Artikel, "_1")) %>% 
-                            mutate(Post_Prediction = str_remove(Post_Prediction, "post_pred_A")) %>% 
-                            mutate(Post_Prediction = str_remove(Post_Prediction, "_round")) %>% 
-                            filter (Artikel == Post_Prediction) %>% 
-                            select(ResponseId, Artikel, User_Bewertung, RS_Post_Prediction)
+testB <- data_article_UBCF %>% group_by(ResponseId) %>%
+  gather(key = "Artikel",
+         value = "User_Bewertung",
+         loop1.1_1,
+         loop1.2_1,
+         loop1.3_1,
+         loop1.4_1) %>%
+  gather(
+    key = "Post_Prediction",
+    value = "RS_Post_Prediction",
+    post_pred_A1_round,
+    post_pred_A2_round,
+    post_pred_A3_round,
+    post_pred_A4_round
+  ) %>%
+  mutate(Artikel = str_remove(Artikel, "loop1.")) %>%
+  mutate(Artikel = str_remove(Artikel, "_1")) %>%
+  mutate(Post_Prediction = str_remove(Post_Prediction, "post_pred_A")) %>%
+  mutate(Post_Prediction = str_remove(Post_Prediction, "_round")) %>%
+  filter (Artikel == Post_Prediction) %>%
+  select(ResponseId, Artikel, User_Bewertung, RS_Post_Prediction)
 
 testC <- inner_join(test, testB, by = c("ResponseId","Artikel","User_Bewertung"))
 
