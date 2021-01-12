@@ -32,7 +32,7 @@ data_newsConsum <- read_rds(file = here::here("data", "data_newsConsum.rds"))
 data_publishing <- read_rds(file = here::here("data", "data_publishing.rds"))
 data_RS_einschaetzung <- read_rds(file = here::here("data", "data_RS_einschaetzung.rds"))
 data_topicSelect <- read_rds(file = here::here("data", "data_topicSelect.rds"))
-
+ 
 ```
 
 
