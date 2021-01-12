@@ -23,6 +23,7 @@ library(haven)
 #library(knitr)
 library(apastats)
 library(viridis)
+library(hrbrthemes)
 
 data_cleaned <- read_rds(file = here::here("data", "data_cleaned.rds"))
 data_demograph <- read_rds(file = here::here("data", "data_demograph.rds"))
@@ -43,7 +44,8 @@ data_demograph  %>% ggplot() +
                   labels = c("männlich",
                              "weiblich")) +
   scale_y_continuous(labels = scales::percent) +
-  coord_flip(ylim = c(0, 0.65)) 
+  coord_flip(ylim = c(0, 0.65)) +
+  cowplot::theme_minimal_vgrid()
 ```
 
 ```{r gender_describe}
@@ -81,31 +83,36 @@ Es besteht dabei kein signifikanter Altersunterschied zwischen den Geschlechtern
 
 ## Schulbildung
 ```{r school_graph}
-a <- data_demograph  %>% ggplot(aes(
-  x = school,
-  y = ..prop..,
-  fill = factor(gender)
-)) +
+(a <- 
+   data_demograph %>% 
+   ggplot() + 
+   aes(x = school,
+       y = ..prop.., 
+       fill = factor(gender)
+   ) +
   geom_bar(position = "dodge2") +
   geom_text(
     aes(
-      label = scales::percent(x = ..prop.., accuracy = 1),
-      y = ..prop..
+      label = scales::percent(x = ..prop.., accuracy = 1), 
+      y = ..prop..,
+      fill = factor(gender)
     ),
     stat = "count",
     position = position_dodge(width = 1),
-    vjust = -0.2,
+    #vjust = -1.2#,
+    #nudge_y = 0.1,
+    hjust = -.5,
     size = 2.5
   ) +
-  labs(y = "Anteil in %", x = "Schulabschluss") +
+  labs(y = "Anteil in %", title = "Schulabschluss", x = "") +
   scale_fill_manual(
     values = c("skyblue", "royalblue"),
     name = "Geschlecht",
     labels = c("männlich", "weiblich")
   ) +
   guides(fill = guide_legend(reverse = TRUE)) +
-  coord_cartesian(ylim = c(0, 0.8)) +
-  coord_flip() +
+ # coord_cartesian(ylim = c(0, 0.8)) +
+  coord_flip(ylim = c(0, 0.8)) +
   theme_minimal() +
   #theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
   scale_x_continuous(
@@ -118,8 +125,11 @@ a <- data_demograph  %>% ggplot(aes(
       "Sonstiges"
     )
   ) +
-  scale_y_continuous(labels = scales::percent)
+  scale_y_continuous(labels = scales::percent) +
+   cowplot::theme_minimal_vgrid(font_size = 10) +
+   theme(axis.line = element_blank(), axis.ticks = element_blank())
 
+)
 ```
 
 Von den Befragten haben:
@@ -134,34 +144,49 @@ Die Befragten haben alle ein sehr hohes Bildungsniveau. Insgesamt besitzen `r ta
 
 ## Berufsausbildung
 ```{r education_graph}
-b<- data_demograph  %>% ggplot(aes(x = education, 
-                               y = ..prop..,
-                               fill = factor(gender))) + 
-                    geom_bar(position = "dodge2") + 
-                    geom_text(aes(label = scales::percent(x = ..prop.., accuracy = 1), y= ..prop..),
-                              stat= "count", 
-                              position = position_dodge(width = 1), 
-                              vjust = -0.2,
-                              size = 2.5) +
-                    labs(y = "", x="Ausbildungsabschluss") +
-                    scale_fill_manual(values = c("skyblue","royalblue"),
-                                      name="Geschlecht",
-                                      labels=c("männlich", "weiblich")) +
-                    guides(fill = guide_legend(reverse = TRUE)) +
-                    coord_cartesian(ylim=c(0,0.8))+
-                    theme_minimal() +
-                    theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
-                    scale_x_continuous(breaks = 1:6,
-                                       labels = c("kein abgeschl. \n Studium/Ausbildung",
-                                                  "Ausbildung",
-                                                  "Meister",
-                                                  "Hochschul- \n abschluss",
-                                                  "Promotion",
-                                                  "Sonstiges")) +
-                    scale_y_continuous(labels = NULL,
-                                       sec.axis = sec_axis(~., labels = scales::percent))
-
-ggpubr::ggarrange(a,b, common.legend = T, legend = "top")
+b <- data_demograph  %>% ggplot(aes(
+  x = education,
+  y = ..prop..,
+  fill = factor(gender)
+)) +
+  geom_bar(position = "dodge2") +
+  geom_text(
+    aes(
+      label = scales::percent(x = ..prop.., accuracy = 1),
+      y = ..prop..
+    ),
+    stat = "count",
+    position = position_dodge(width = 1),
+    #vjust = -0.2,
+    hjust = -0.5,
+    size = 2.5
+  ) +
+  labs(y = "Proportion", title = "Ausbildungsabschluss", x = "") +
+  scale_fill_manual(
+    values = c("skyblue", "royalblue"),
+    name = "Geschlecht",
+    labels = c("männlich", "weiblich")
+  ) +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  coord_flip(ylim = c(0, 0.8)) +
+  theme_minimal() +
+  #theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+  scale_x_continuous(
+    breaks = 1:6,
+    labels = c(
+      "kein abgeschl. \n Studium/Ausbildung",
+      "Ausbildung",
+      "Meister",
+      "Hochschul- \n abschluss",
+      "Promotion",
+      "Sonstiges"
+    )
+  ) +
+  scale_y_continuous(labels = scales::percent) +
+                     #sec.axis = sec_axis( ~ ., labels = scales::percent)) +
+  cowplot::theme_minimal_vgrid(font_size = 10) +
+  theme(axis.line = element_blank(), axis.ticks = element_blank())
+ggpubr::ggarrange(a,b, common.legend = T, legend = "right") + theme_void(base_size = 8)
 ```
 
 Von den Befragten haben:
@@ -262,44 +287,82 @@ Der KUT der Befragten ist mittelmäßig stark `r skimr::inline_hist(data_kut$KUT
       8	= seltener als 1-mal pro Monat --> 
 
 ```{r internetport_description}
-data_newsConsumTest <- inner_join(data_newsConsum, data_demograph, by="ResponseId") %>% select(ResponseId,gender, age_grp,starts_with("news"))
+data_newsConsumTest <-
+  data_newsConsum %>% inner_join(data_demograph, by = "ResponseId") %>% 
+  select(ResponseId, gender, age_grp, starts_with("news"))
 
 A <- data_newsConsumTest %>% filter(!is.na(newsPortalFrequency_2))
 
-mrg_newsConsum <- data_newsConsum %>% select(-newsPortal_7_TEXT) %>% select(newsPortalFrequency_1, newsPortalFrequency_2, newsPortalFrequency_3, newsPortalFrequency_4, newsPortalFrequency_5, newsPortalFrequency_6, newsPortalFrequency_7) %>% sjlabelled::remove_all_labels() %>%  pivot_longer(cols = starts_with("newsPortalFre"), names_to = "Portal", values_to = "Nutzungshäufigkeit")
+mrg_newsConsum <- data_newsConsum %>%
+  select(-newsPortal_7_TEXT) %>%
+  select(
+    newsPortalFrequency_1,
+    newsPortalFrequency_2,
+    newsPortalFrequency_3,
+    newsPortalFrequency_4,
+    newsPortalFrequency_5,
+    newsPortalFrequency_6,
+    newsPortalFrequency_7
+  ) %>% 
+  sjlabelled::remove_all_labels() %>%  
+  pivot_longer(
+    cols = starts_with("newsPortalFre"),
+    names_to = "Portal",
+    values_to = "Nutzungshäufigkeit"
+  )
+```
 
+
+```{r internetport_description}
 ggstatsplot::ggbarstats(
   data = mrg_newsConsum,
+  y = "Portal", 
+  x = "Nutzungshäufigkeit",
   bar.proptest = F,
   condition = Portal,
-  main = Nutzungshäufigkeit,
   xlab = "Nachrichtenportale",
   ylab = "",
   label.text.size = 2.5,
   label.fill.alpha = 0.7,
   legend.position = "top",
-  labels.legend = c("seltener als 1-mal pro Monat",
+  x.axis.orientation = "slant",
+  ggstatsplot.layer = TRUE,
+  #ggplot.component = ggplot2::theme(axis.text.x = ggplot2::element_text(face = "italic")),
+  results.subtitle = FALSE,
+  ) + 
+  coord_flip() +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_discrete(
+    limits = c(
+      "newsPortalFrequency_7",
+      "newsPortalFrequency_6",
+      "newsPortalFrequency_5",
+      "newsPortalFrequency_4",
+      "newsPortalFrequency_3",
+      "newsPortalFrequency_2",
+      "newsPortalFrequency_1"
+    ),
+    labels = c(
+      "Sonstige",
+      "Soziale Netzwerke",
+      "Suchmaschinen",
+      "Online-Nachrichtenportale",
+      "Regionaler Zeitungen",
+      "Überregionaler Zeitungen",
+      "Öffentlich-rechtlicher \n Rundfunk"
+    )
+  ) + 
+  scale_fill_viridis_d(labels = c("seltener als 1-mal pro Monat",
                     "1-mal pro Monat",
                     "2-3 mal pro Monat",
                     "1-mal pro Woche",
                     "2-4 mal pro Woche",
                     "4-6 mal pro Woche", 
                     "1-mal pro Tag", 
-                    "mehrmals täglich"),
-  x.axis.orientation = "slant",
-  ggstatsplot.layer = FALSE,
-  ggplot.component = ggplot2::theme(axis.text.x = ggplot2::element_text(face = "italic")),
-  results.subtitle = FALSE,
-  palette = "Dark2",
-  messages = B) + 
-  coord_flip() +
-  scale_y_continuous(labels = scales::percent) +
-  scale_x_discrete(limits = c("newsPortalFrequency_7","newsPortalFrequency_6","newsPortalFrequency_5","newsPortalFrequency_4","newsPortalFrequency_3","newsPortalFrequency_2","newsPortalFrequency_1"),  labels = c("Sonstige",                                                                                                                                                                  "Soziale Netzwerke",
-                                        "Suchmaschinen",
-                                        "Online-Nachrichtenportale",
-                                        "Regionaler Zeitungen",
-                                        "Überregionaler Zeitungen",
-                                        "Öffentlich-rechtlicher \n Rundfunk")) + scale_color_viridis() 
+                    "mehrmals täglich")) +
+  theme_minimal(base_size = 12) +
+  
+  theme(legend.position = "top")
 ```
 
 Von den Befragten nutzen:
@@ -451,7 +514,11 @@ Die Befragten machen sich leichte Sorgen `r skimr::inline_hist(data_RS_trust$RS_
 
 ## Einschätzung Qualität
 ```{r quality_expection}
-mrg_data_empf_gen <- data_RS_einschaetzung %>% select(-ResponseId) %>% pivot_longer(cols= starts_with("einsch"), names_to = "Empfehlungssystem", values_to = "Genauigkeit")
+mrg_data_empf_gen <-
+  data_RS_einschaetzung %>% select(-ResponseId) %>%
+  pivot_longer(cols = starts_with("einsch"),
+               names_to = "Empfehlungssystem",
+               values_to = "Genauigkeit")
 
 ggplot(mrg_data_empf_gen, 
        aes(x=reorder(Empfehlungssystem, Genauigkeit, FUN = mean), 
@@ -463,7 +530,7 @@ ggplot(mrg_data_empf_gen,
       scale_x_discrete(labels = c("Random","Popular","IBCF","UBCF","Content","Hybrid")) +
       scale_y_continuous(labels = scales::unit_format(suffix =" %"))
 
-g <- ggstatsplot::ggbetweenstats(data =mrg_data_empf_gen, 
+g <- ggstatsplot::ggbetweenstats(data = mrg_data_empf_gen, 
                             x = Empfehlungssystem, 
                             y = Genauigkeit, 
                             xlab = "Empfehlungssystem",
