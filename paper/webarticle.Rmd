@@ -37,14 +37,14 @@ data_topicSelect <- read_rds(file = here::here("data", "data_topicSelect.rds"))
 
 
 
-# Skalen Reliabilität
+# Scale Reliability
 ```{r child = '00_reliability_analysis.Rmd', eval=TRUE}
-
-
 ```
 
 
-
+# Sample Description
+```{r child = '10_sample.Rmd', eval=TRUE}
+```
 
 
 

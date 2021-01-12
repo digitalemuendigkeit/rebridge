@@ -1,0 +1,697 @@
+---
+title: "Stichprobenbeschreibung"
+author: "Stefan Ahlers"
+date: "13 11 2019"
+output:
+  html_document: 
+    toc: true
+    toc_float: true
+    code_folding : hide
+    df_print : paged
+  pdf_document: default
+---
+
+An der Umfrage haben insgesamt `r length(raw$ResponseId)` Personen teilgenommen. Davon haben `r length(data_cleaned$ResponseId)` Personen die Umfrage vollständig abgeschlossen und werden in der folgenden Auswertung berücksichtigt. Dies entspricht einer Abbrecherquote von `r (1 - length(data_demograph$ResponseId)/length(raw$ResponseId))*100` %.
+
+```{r setupTMP, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(haven)
+#library(sjPlot)
+#library(sjlabelled)
+#library(kableExtra)
+#library(knitr)
+library(apastats)
+library(viridis)
+```
+
+
+## Geschlecht
+```{r  gender_graph}
+data_demograph  %>% ggplot() +
+  aes(x = gender, y = ..prop..) +
+  geom_bar(width = .5) +
+  geom_text(aes(label = scales::percent(..prop..), y = ..prop..),
+            stat = "count",
+            hjust = -0.1) +
+  labs(y = "Anteil in %", x = "Geschlecht") +
+  scale_x_reverse(breaks = 1:2,
+                  labels = c("männlich",
+                             "weiblich")) +
+  scale_y_continuous(labels = scales::percent) +
+  coord_flip(ylim = c(0, 0.65)) 
+```
+
+```{r gender_describe}
+# Definiere Geschlechter und Nutzeranzahl
+male   <- table(data_demograph$gender)[1]
+female <- table(data_demograph$gender)[2]
+divers <- table(data_demograph$gender)[0]
+user   <- length(data_demograph$ResponseId)
+```
+
+Die Teilnehmer der Umfrage waren`r skimr::inline_hist(data_demograph$gender, n_bins = 2)` zu:
+
+* `r female/user*100` % weiblich
+* `r male/user*100` % männlich
+* `r divers/user*100`0 % divers
+
+## Alter
+```{r age_graph}
+
+# Grafische Darstellung
+data_demograph  %>% ggplot() + 
+                    aes(x = as.numeric(age), 
+                        fill = factor(gender)) + 
+                    geom_histogram(position = "stack", binwidth = 2) + 
+                    xlab("Alter") + 
+                    ylab("Anzahl") + 
+                    scale_fill_discrete(name="Geschlecht",
+                                        labels=c("männlich", "weiblich"))
+
+#wilcox.test(data_demograph$age ~ data_demograph$gender)
+```
+Die Befragten waren zwischen `r min(data_demograph$age)` und  `r max(data_demograph$age)` Jahre alt `r skimr::inline_hist(data_demograph$age)`. Das Durchschnittsalter der Befragten beträgt `r mean(data_demograph$age)` Jahre (`r describe.mean.sd(data_demograph$age)`). 
+
+Es besteht dabei kein signifikanter Altersunterschied zwischen den Geschlechtern. Die männlichen Befragten sind `r tapply(data_demograph$age, data_demograph$gender, mean)[1]` Jahre (SD = `r tapply(data_demograph$age, data_demograph$gender, sd)[1]`) und die weiblichen Befragten `r tapply(data_demograph$age, data_demograph$gender, mean)[2]` Jahre alt (SD = `r tapply(data_demograph$age, data_demograph$gender, sd)[2]`).
+
+## Schulbildung
+```{r school_graph}
+a <- data_demograph  %>% ggplot(aes(x = school, 
+                               y = ..prop..,
+                               fill = factor(gender))) + 
+                    geom_bar(position = "dodge2") + 
+                    geom_text(aes(label = scales::percent(x = ..prop.., accuracy = 1), y= ..prop..),
+                              stat= "count", 
+                              position = position_dodge(width = 1), 
+                              vjust = -0.2,
+                              size = 2.5) +
+                    labs(y = "Anteil in %", x="Schulabschluss") +
+                    scale_fill_manual(values = c("skyblue","royalblue"),
+                                      name="Geschlecht",
+                                      labels=c("männlich", "weiblich")) +
+                    guides(fill = guide_legend(reverse = TRUE)) +
+                    coord_cartesian(ylim=c(0,0.8))+
+                    theme_minimal() +
+                    theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+                    scale_x_continuous(breaks = 1:5,labels = c("keine Schul- \n ausbildung",
+                                                            "Volks-/Haupschul- \n abschluss",
+                                                            "Realschul- \n abschluss",
+                                                            "(Fach-)Abitur",
+                                                            "Sonstiges")) +
+                    scale_y_continuous(labels = scales::percent)
+
+```
+
+Von den Befragten haben:
+
+* `r table(data_demograph$school)[1]/user*100` % (noch) keine Schulabschluss
+* `r table(data_demograph$school)[2]/user*100` % einen Hauptschulabschluss
+* `r table(data_demograph$school)[3]/user*100` % einen Realschulabschluss 
+* `r table(data_demograph$school)[4]/user*100` % das (Fach-)Abitur
+
+Die Befragten haben alle ein sehr hohes Bildungsniveau. Insgesamt besitzen `r table(data_demograph$school)[4]/user*100` % das (Fach-)Abitur. Auch zwischen den Geschlechtern ist kein Unterschied erkennbar, so haben `r table(data_demograph$school, data_demograph$gender)[4,1]/male*100` % der männlichen und `r table(data_demograph$school, data_demograph$gender)[4,2]/female*100` % der weiblichen Befragten das Abitur.
+
+
+## Berufsausbildung
+```{r education_graph}
+b<- data_demograph  %>% ggplot(aes(x = education, 
+                               y = ..prop..,
+                               fill = factor(gender))) + 
+                    geom_bar(position = "dodge2") + 
+                    geom_text(aes(label = scales::percent(x = ..prop.., accuracy = 1), y= ..prop..),
+                              stat= "count", 
+                              position = position_dodge(width = 1), 
+                              vjust = -0.2,
+                              size = 2.5) +
+                    labs(y = "", x="Ausbildungsabschluss") +
+                    scale_fill_manual(values = c("skyblue","royalblue"),
+                                      name="Geschlecht",
+                                      labels=c("männlich", "weiblich")) +
+                    guides(fill = guide_legend(reverse = TRUE)) +
+                    coord_cartesian(ylim=c(0,0.8))+
+                    theme_minimal() +
+                    theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+                    scale_x_continuous(breaks = 1:6,
+                                       labels = c("kein abgeschl. \n Studium/Ausbildung",
+                                                  "Ausbildung",
+                                                  "Meister",
+                                                  "Hochschul- \n abschluss",
+                                                  "Promotion",
+                                                  "Sonstiges")) +
+                    scale_y_continuous(labels = NULL,
+                                       sec.axis = sec_axis(~., labels = scales::percent))
+
+ggpubr::ggarrange(a,b, common.legend = T, legend = "top")
+```
+
+Von den Befragten haben:
+
++ `r table(data_demograph$education)[1]/user*100` % noch keine Ausbildung/ kein Studium abgeschlossen
++ `r table(data_demograph$education)[2]/user*100` % eine Ausbildung abgeschlossen
++ `r table(data_demograph$education)[3]/user*100` % einen Meister gemacht
++ `r table(data_demograph$education)[4]/user*100` % einen Hochschulabschluss erworben
++ `r table(data_demograph$education)[5]/user*100` % promoviert
+
+## BigFive
+```{r bigFive_mrg, include=FALSE}
+mrg_bigFive <- data_bigFive %>% select(Offenheit = offenheit, Neurotisch = neuro, Verträglichkeit = vertraeglich, Extraversion = extraversion, Gewissenhaftigkeit = gewissenhaft) %>% pivot_longer(cols= c(Offenheit, Neurotisch, Verträglichkeit, Extraversion, Gewissenhaftigkeit), names_to = "Persönlichkeit", values_to = "Ausprägung")
+```
+
+```{r bigFive_graph}
+ggplot(mrg_bigFive, 
+       aes(x=reorder(Persönlichkeit, Ausprägung, FUN = mean), 
+           y=Ausprägung))+
+      geom_violin(alpha = 0.6, 
+                  fill = "lightblue") +
+      geom_boxplot(alpha = 0.7) +
+      labs(x = "Persönlichkeitsmerkmal") +
+      scale_x_discrete(labels = c("Neurotisch","Verträglichkeit","Extraversion","Offenheit","Gewissenhaftigkeit")) +
+      scale_y_continuous(breaks = seq(1, 6, by = 1)) +
+      coord_cartesian(ylim = c(1,6)) 
+
+c <- ggstatsplot::ggbetweenstats(data =mrg_bigFive, 
+                            x = Persönlichkeit, 
+                            y = Ausprägung, 
+                            xlab = "Merkmal",
+                            ylab = "(1 = stark widersprechend; 6 = stark entsprechend)",
+                            title = "Persönlichkeit",
+                            sort = "ascending", # ordering groups along the x-axis based on
+                            sort.fun = median, # values of `y` variable
+                            point.jitter.width = 0.8, 
+                            point.jitter.height = 0.18,
+                            ggtheme = ggplot2::theme_light(),
+                            results.subtitle = FALSE,
+                            messages = F,
+                            ggstatsplot.layer = FALSE) +
+                            coord_cartesian(ylim = c(1, 6)) +
+                            scale_y_continuous(breaks = seq(1, 6, by = 1))
+
+```
+Bei der Betrachtung der Persönlichkeitsmerkmale der Probanden wird erkennbar, dass die Mehrheit der Teilnehmer keine neurotische Tendenzen zeigen `r skimr::inline_hist(data_bigFive$neuro, n_bins = 6)` (`r describe.mean.sd(data_bigFive$neuro)`). Darüberhinaus sind die meisten Befragten schwach verträglich veranlagt `r skimr::inline_hist(data_bigFive$vertraeglich, n_bins = 6)`(`r describe.mean.sd(data_bigFive$vertraeglich)`). In der Stichprobe gibt es etwas mehr Probanden, die extrovertiert sind, als Probanden die eine introvetierte Persönlichkeit zeigen `r skimr::inline_hist(data_bigFive$extraversion, n_bins = 6)` (`r describe.mean.sd(data_bigFive$extraversion)`). Darüber hinaus sind die Probanden offene `r skimr::inline_hist(data_bigFive$offenheit, n_bins = 6)` (`r describe.mean.sd(data_bigFive$offenheit)`), und gewissenhafte `r skimr::inline_hist(data_bigFive$gewissenhaft, n_bins = 6)` (`r describe.mean.sd(data_bigFive$gewissenhaft)`) Menschen.
+
+## KUT
+```{r KUT_describe}
+data_KUT_gender <- inner_join(data_demograph, data_kut, by="ResponseId") %>% select(gender,KUT) %>% sjlabelled::remove_all_labels()
+
+#cor(data_KUT_gender$gender, data_KUT_gender$KUT)
+
+KUT_male <- data_KUT_gender %>% filter(gender == 1) %>% select(KUT)
+KUT_female <- data_KUT_gender %>% filter(gender == 2) %>% select(KUT)
+#describe.mean.sd(KUT_male$KUT)
+#describe.mean.sd(KUT_female$KUT)
+#describe.mean.sd(data_kut$KUT)
+#describe.ttest(t.test(data_kut$KUT ~ data_demograph$gender))
+
+d <- ggstatsplot::ggbetweenstats(data = data_KUT_gender, 
+                            x=gender, 
+                            y=KUT,
+                            ggtheme = ggplot2::theme_light(),
+                            xlab = "Geschlecht",
+                            ylab = "",
+                            title = "KUT",
+                            results.subtitle = F,
+                            messages = F,
+                            ggstatsplot.layer = FALSE) +
+                            coord_cartesian(ylim = c(1, 6)) +
+                            scale_x_discrete(labels = c("Männlich","Weiblich"),
+                                             expand = expand_scale(mult = 0.1)) +
+                            scale_y_continuous(breaks = seq(1, 6, by = 1))
+
+gridExtra::grid.arrange(c,d, layout_matrix = rbind(c(1,1,2)))
+```
+
+Der KUT der Befragten ist mittelmäßig stark `r skimr::inline_hist(data_kut$KUT, n_bins = 6)` ausgeprägt: `r describe.mean.sd(data_kut$KUT)`. Bei der Betrachtung der Geschlechter ist erkennbar, dass die männlichen Befragten einen stark signifikat höherne KUT (`r describe.mean.sd(KUT_male$KUT)`) als die Frauen (`r describe.mean.sd(KUT_female$KUT)`) haben (`r describe.ttest(t.test(data_kut$KUT ~ data_demograph$gender))`).
+ 
+## Internetportale
+
+```{r internetportal_trash}
+# Portal 1
+#portal1_gender <- table(data_newsConsum$newsPortal_1, data_demograph$gender)
+#sum(portal1_gender)/user
+#portal1_gender[,1]/male
+#portal1_gender[,2]/female
+```
+
+<!--- 1 =	mehrmals täglich			
+      2	= 1-mal pro Tag			
+      3	= 4- bis 6-mal pro Woche			
+      4 =	2- bis 3-mal pro Woche			
+      5	= 1-mal pro Woche			
+      6	= 2- bis 3-mal pro Monat			
+      7	= 1-mal pro Monat			
+      8	= seltener als 1-mal pro Monat --> 
+
+```{r internetport_description}
+data_newsConsumTest <- inner_join(data_newsConsum, data_demograph, by="ResponseId") %>% select(ResponseId,gender, age_grp,starts_with("news"))
+
+A <- data_newsConsumTest %>% filter(!is.na(newsPortalFrequency_2))
+
+mrg_newsConsum <- data_newsConsum %>% select(-newsPortal_7_TEXT) %>% select(newsPortalFrequency_1, newsPortalFrequency_2, newsPortalFrequency_3, newsPortalFrequency_4, newsPortalFrequency_5, newsPortalFrequency_6, newsPortalFrequency_7) %>% sjlabelled::remove_all_labels() %>%  pivot_longer(cols = starts_with("newsPortalFre"), names_to = "Portal", values_to = "Nutzungshäufigkeit")
+
+ggstatsplot::ggbarstats(
+  data = mrg_newsConsum,
+  bar.proptest = F,
+  condition = Portal,
+  main = Nutzungshäufigkeit,
+  xlab = "Nachrichtenportale",
+  ylab = "",
+  label.text.size = 2.5,
+  label.fill.alpha = 0.7,
+  legend.position = "top",
+  labels.legend = c("seltener als 1-mal pro Monat",
+                    "1-mal pro Monat",
+                    "2-3 mal pro Monat",
+                    "1-mal pro Woche",
+                    "2-4 mal pro Woche",
+                    "4-6 mal pro Woche", 
+                    "1-mal pro Tag", 
+                    "mehrmals täglich"),
+  x.axis.orientation = "slant",
+  ggstatsplot.layer = FALSE,
+  ggplot.component = ggplot2::theme(axis.text.x = ggplot2::element_text(face = "italic")),
+  results.subtitle = FALSE,
+  palette = "Dark2",
+  messages = B) + 
+  coord_flip() +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_discrete(limits = c("newsPortalFrequency_7","newsPortalFrequency_6","newsPortalFrequency_5","newsPortalFrequency_4","newsPortalFrequency_3","newsPortalFrequency_2","newsPortalFrequency_1"),  labels = c("Sonstige",                                                                                                                                                                  "Soziale Netzwerke",
+                                        "Suchmaschinen",
+                                        "Online-Nachrichtenportale",
+                                        "Regionaler Zeitungen",
+                                        "Überregionaler Zeitungen",
+                                        "Öffentlich-rechtlicher \n Rundfunk")) + scale_color_viridis() 
+```
+
+Von den Befragten nutzen:
+
+* `r table(data_newsConsum$newsPortal_1)/user*100` % aller Befragten die Internetportale des öffentlich-rechtlichen Rundfunks. Dabei nutzen sie diese im Durchschnitt fast täglich (`r apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_1)`).
+* `r table(data_newsConsum$newsPortal_2)/user*100` % die Internetportale überregionaler Zeitungen. Dabei nutzen sie diese im Durchschnitt mehrmals die Woche (`r apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_2)`).
+* `r table(data_newsConsum$newsPortal_3)/user*100` % die Internetportale regionaler Zeitungen. Dabei nutzen sie diese im Durchschnitt mehrmals die Woche (`r apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_3)`).
+* `r table(data_newsConsum$newsPortal_4)/user*100` % Online-Nachrichtenportale. Dabei nutzen sie diese im Durchschnitt mehrmals die Woche (`r apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_4)`).
+* `r table(data_newsConsum$newsPortal_5)/user*100` % Suchmaschinen. Dabei nutzen sie diese im Durchschnitt fast täglich (`r apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_5)`).
+* `r table(data_newsConsum$newsPortal_6)/user*100` % Soziale Netwerke. Dabei nutzen sie diese im Durchschnitt mindestens einmal täglich (`r apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_6)`).
+* `r table(data_newsConsum$newsPortal_7)/user*100` % sonstige Quellen. Dabei nutzen sie diese im Durchschnitt fast täglich (`r apastats::describe.mean.sd(data_newsConsum$newsPortalFrequency_7)`).
+
+um an neue Informationen zu gelangen.
+
+Zwischen den Geschlechtern besteht nur bei der Nutzung von regionalen ein signifikanter Unterschied (`r describe.ttest(t.test(data_newsConsum$newsPortalFrequency_2 ~ data_demograph$gender))`). Die männlichen Befragten nutzen die regionalen Tageszeitungen fast täglich (`r apastats::describe.mean.sd(m= tapply(A$newsPortalFrequency_2, A$gender, mean)[1], sd= tapply(A$newsPortalFrequency_2, A$gender, sd)[1])`) während die weiblichen Befragten dies nur einmal die Woche tun (`r apastats::describe.mean.sd(m= tapply(A$newsPortalFrequency_2, A$gender, mean)[2], sd= tapply(A$newsPortalFrequency_2, A$gender, sd)[2])`.
+
+## Themenauswahl
+
+```{r topic_graph}
+
+# PROBLEM
+# Finde alle NA und ersetzte NA durch 9 
+h <- data_topicSelect  %>% ggplot(aes(x = interestingTopic,
+                               y = ..prop..,
+                               fill = factor(data_demograph$gender))) + 
+                    geom_bar(position = position_dodge2(preserve = "single")) + 
+                    geom_text(aes(label = scales::percent(..prop..),      y= ..prop.. ),
+                              stat= "count", position = position_dodge(width = 1), hjust = -0.1) +
+                    labs(y = "Anteil in %", x="", title="Themenwahl") +
+                                      scale_fill_manual(values = c("skyblue","royalblue"),
+                                      name="Geschlecht",
+                                      labels=c("männlich", "weiblich")) +
+                    guides(fill = guide_legend(reverse = TRUE)) +
+                    theme_light() +
+                    theme(legend.position = "bottom") +
+                    coord_flip(ylim=c(0,0.33))+
+                    scale_x_reverse(breaks = 1:9,labels = c("Politik","Games","Wirtschaft","Kultur","Lifestyle","Computer & \n Technik","Netzpolitik","Wissenschaft","keine Angabe")) +
+                    scale_y_continuous(labels = scales::percent)
+
+#data_topicSelect$interestingTopic[1]$label
+
+#describe.chi(table(data_topicSelect$interestingTopic, data_demograph$gender))
+
+```
+
+Von den vorgegebenen Themenbereichen haben sich:
+
+* `r table(data_topicSelect$interestingTopic)[1]/user*100` % für Politik entschieden
+* `r table(data_topicSelect$interestingTopic)[2]/user*100` % für Games entschieden
+* `r table(data_topicSelect$interestingTopic)[3]/user*100` % für Wirtschaft entschieden
+* `r table(data_topicSelect$interestingTopic)[4]/user*100` % für Kultur entschieden
+* `r table(data_topicSelect$interestingTopic)[5]/user*100` % für Lifestyle entschieden
+* `r table(data_topicSelect$interestingTopic)[6]/user*100` % für Computer & Technik entschieden
+* `r table(data_topicSelect$interestingTopic)[7]/user*100` % für Netzpolitik entschieden
+* `r table(data_topicSelect$interestingTopic)[8]/user*100` % für Wissenschaft entschieden
+* `r table(data_topicSelect$interestingTopic)[9]/user*100` % keine Angaben gemacht
+
+Wie aus der Grafik erkennbar ist, gibt es bei der Themenwahl einen signifikanten Unterschied zwischen den Geschlechtern (`r describe.chi(table(data_topicSelect$interestingTopic, data_demograph$gender))`).
+
+## Freigabe Datentypen für RS
+
+```{r data_publishing}
+mrg_data_pub_gen <- data_publishing %>% select(-ResponseId) %>%  sjlabelled::remove_all_labels()
+#mrg_data_pub_gen$RS_thema <- as.numeric(mrg_data_pub_gen$RS_thema)
+#mrg_data_pub_gen$RS_gelesene_artikel <- as.numeric(mrg_data_pub_gen$RS_gelesene_artikel)
+#mrg_data_pub_gen$RS_hobby <- as.numeric(mrg_data_pub_gen$RS_hobby)
+#mrg_data_pub_gen$RS_demograph <- as.numeric(mrg_data_pub_gen$RS_demograph)
+#mrg_data_pub_gen$RS_standort <- as.numeric(mrg_data_pub_gen$RS_standort)
+#mrg_data_pub_gen$RS_politik <- as.numeric(mrg_data_pub_gen$RS_politik)
+#mrg_data_pub_gen$RS_religion <- as.numeric(mrg_data_pub_gen$RS_religion)
+
+mrg_data_pub_gen <- mrg_data_pub_gen %>%  pivot_longer(cols= c(starts_with("RS")), names_to = "Datentyp", values_to = "Bereitschaft")
+
+ggplot(mrg_data_pub_gen, 
+       aes(x=reorder(Datentyp, Bereitschaft, FUN = mean), 
+           y=Bereitschaft))+
+      geom_violin(alpha = 0.6, 
+                  fill = "lightblue") +
+      geom_boxplot(alpha = 0.7) +
+      labs(x = "Datentyp") +
+      scale_x_discrete(labels = c("Standort","Politische Einstellung","Religion","Geschlecht/Alter","Bewertung","Hobby","Themengebiete")) +
+      scale_y_continuous(breaks = seq(1, 6, by = 1)) +
+      coord_cartesian(ylim = c(1,6)) 
+
+e <- ggstatsplot::ggbetweenstats(data =mrg_data_pub_gen, 
+                            x = Datentyp, 
+                            y = Bereitschaft, 
+                            xlab = "Datentypen",
+                            ylab = "(1 = volle Ablehnung; 6 = volle Zustimmung)",
+                            title = "Bereitschaft zur Datenfreigabe",
+                            sort = "ascending", # ordering groups along the x-axis based on
+                            sort.fun = mean, # values of `y` variable
+                            point.jitter.width = 0.8, 
+                            point.jitter.height = 0.18,
+                            ggtheme = ggplot2::theme_light(),
+                            results.subtitle = FALSE,
+                            messages = F,
+                            ggstatsplot.layer = FALSE) +
+                            coord_cartesian(ylim = c(1, 6)) +
+                            scale_x_discrete(labels = c("Standort","Politische \n Einstellung","Religion","Demografische \n Daten","Bewertung","Hobby","Themengebiete")) +
+                            scale_y_continuous(breaks = seq(1, 6, by = 1))
+```
+
+Bereitschaft zur Datenfreigabe für das Verbessern von Empfehlungssystemen
+
+* Bevorzugten Themengebiete: schwach zugeneigt (`r describe.mean.sd(data_publishing$RS_thema)`) (`r skimr::inline_hist(data_publishing$RS_thema, n_bins = 6)`)
+* Bewertungen über gerade gelesene Artikel: sehr schwach abgeneigt (`r describe.mean.sd(data_publishing$RS_gelesene_artikel) `) (`r skimr::inline_hist(data_publishing$RS_gelesene_artikel , n_bins = 6)`)
+* Persönliche Interessen (Hobbys): sehr schwach abgeneigt (`r describe.mean.sd(data_publishing$RS_hobby) `) (`r  skimr::inline_hist(data_publishing$RS_hobby , n_bins = 6)`)
+* Persönliche Angaben (Geschlecht, Alter): schwach abgeneigt (`r describe.mean.sd(data_publishing$RS_demograph) `) (`r  skimr::inline_hist(data_publishing$RS_demograph , n_bins = 6)`)
+* Aktueller Standort: abgeneigt (`r describe.mean.sd(data_publishing$RS_standort) `) (`r  skimr::inline_hist(data_publishing$RS_standort , n_bins = 6)`)
+* Politische Einstellung: abgeneigt (`r describe.mean.sd(data_publishing$RS_politik) `) (`r  skimr::inline_hist(data_publishing$RS_politik , n_bins = 6)`)
+* Religionszugehörigkeit: abgeneigt (`r describe.mean.sd(data_publishing$RS_religion) `) (`r  skimr::inline_hist(data_publishing$RS_religion, n_bins = 6)`)
+
+## Einstellung Privatsphäre von RS
+
+```{r RS_privacy}
+ggplot(data_RS_trust,aes(x=data_cleaned$gender, y=RS_Privacy_Trust, group=as.numeric(data_cleaned$gender)))+
+      geom_violin(alpha = 0.6, fill = "lightblue") +
+      geom_boxplot(alpha = 0.7)+
+      labs(x ="Geschlecht", y = "Einstellung zur Privatsphäre eines Empfehlungssystems") +
+      scale_x_continuous(breaks = 1:2, labels = c("männlich","weiblich")) +
+      scale_y_continuous(breaks = seq(1, 6, by = 0.5)) +
+      coord_cartesian(ylim = c(1,6)) 
+
+mrg_privacy <- inner_join(data_demograph, data_RS_trust, by = "ResponseId") %>% select(RS_Privacy_Trust, gender)
+
+f<- ggstatsplot::ggbetweenstats(data =mrg_privacy, 
+                            x = gender, 
+                            y = RS_Privacy_Trust, 
+                            xlab = "Geschlecht",
+                            ylab = "",
+                            title = "Vertrauen in RecSys",
+                            sort = "ascending", # ordering groups along the x-axis based on
+                            sort.fun = mean, # values of `y` variable
+                            point.jitter.width = 0.8, 
+                            point.jitter.height = 0.18,
+                            ggtheme = ggplot2::theme_light(),
+                            results.subtitle = FALSE,
+                            messages = F,
+                            ggstatsplot.layer = FALSE) +
+                            coord_cartesian(ylim = c(1, 6)) +
+                            scale_x_discrete(labels = c("Männlich","Weiblich")) +
+                            scale_y_continuous(breaks = seq(1, 6, by = 1))
+
+gridExtra::grid.arrange(e,f, layout_matrix = rbind(c(1,1,1,2)))
+```
+
+Die Befragten machen sich leichte Sorgen `r skimr::inline_hist(data_RS_trust$RS_Privacy_Trust, n_bins = 6)` um ihre Privatsphäre beim Verwenden von Empfehlungssystemen (`r describe.mean.sd(data_RS_trust$RS_Privacy_Trust) `). Insgesamt machen sich die Frauen etwas mehr Sorgen um ihre Privatsphäre (`r describe.mean.sd(m= tapply(data_RS_trust$RS_Privacy_Trust, data_demograph$gender, mean)[2], sd= tapply(data_RS_trust$RS_Privacy_Trust, data_demograph$gender, sd)[2])`) als die männlichen Befragten (`r describe.mean.sd(m= tapply(data_RS_trust$RS_Privacy_Trust, data_demograph$gender, mean)[1], sd= tapply(data_RS_trust$RS_Privacy_Trust, data_demograph$gender, sd)[1])`). Dieser Unterschied ist signifikant (`r describe.ttest(t.test(data_RS_trust$RS_Privacy_Trust ~ data_demograph$gender))`).
+
+## Einschätzung Qualität
+```{r quality_expection}
+mrg_data_empf_gen <- data_RS_einschaetzung %>% select(-ResponseId) %>% pivot_longer(cols= starts_with("einsch"), names_to = "Empfehlungssystem", values_to = "Genauigkeit")
+
+ggplot(mrg_data_empf_gen, 
+       aes(x=reorder(Empfehlungssystem, Genauigkeit, FUN = mean), 
+           y=Genauigkeit))+
+      geom_violin(alpha = 0.6, 
+                  fill = "lightblue") +
+      geom_boxplot(alpha = 0.8) +
+      labs(x = "Empfehlungssystem") +
+      scale_x_discrete(labels = c("Random","Popular","IBCF","UBCF","Content","Hybrid")) +
+      scale_y_continuous(labels = scales::unit_format(suffix =" %"))
+
+g <- ggstatsplot::ggbetweenstats(data =mrg_data_empf_gen, 
+                            x = Empfehlungssystem, 
+                            y = Genauigkeit, 
+                            xlab = "Empfehlungssystem",
+                            ylab = "Genauigkeit",
+                            title = "Einschätzung der Genauigkeit von Empfehlungssystemen",
+                            sort = "ascending", # ordering groups along the x-axis based on
+                            sort.fun = mean, # values of `y` variable
+                            point.jitter.width = 0.8, 
+                            point.jitter.height = 0.18,
+                            ggtheme = ggplot2::theme_light(),
+                            results.subtitle = FALSE,
+                            messages = F,
+                            ggstatsplot.layer = FALSE) +
+                            coord_cartesian() +
+                            scale_x_discrete(labels = c("Random","Popular","UBCF","IBCF","Content","Hybrid")) +
+                            scale_y_continuous(labels = scales::percent_format(scale = 1))
+
+# Kein Unterschied zwischen den Geschlechtern erkennbar
+
+gridExtra::grid.arrange(g,h, layout_matrix = rbind(c(1,2)))
+g
+h
+```
+
+Die Befragten schätzen die Genauigkeit der Empfehlungssysteme folgendermaßen ein (Angaben in %):
+
+* Zufällige Empfehlungen: `r describe.mean.sd(data_RS_einschaetzung$einsch_random_1)`
+* Populäre Empfehlungen: `r describe.mean.sd(data_RS_einschaetzung$einsch_popular_1)`
+* Inhaltsbasierte Empfehlungen: `r describe.mean.sd(data_RS_einschaetzung$einsch_content_1)`
+* UBCF: `r describe.mean.sd(data_RS_einschaetzung$einsch_UBCF_1)`
+* IBCF: `r describe.mean.sd(data_RS_einschaetzung$einsch_IBCF_1)`
+* Hybride Empfehlungen: `r describe.mean.sd(data_RS_einschaetzung$einsch_hybrid_1)`
+
+Bei diesen Einschätzungen gab es zwischen den Geschlechtern keine signifikaten Unterschiede.
+
+## Wissen über Österreich
+
+```{r knowledge_austria}
+#describe.mean.sd(data_know_austria$knowledge_austria)
+#data_know_austria %>% filter(knowledge_austria > 2) %>% count() %>% as.character()
+```
+Der Kenntnisstand der Befragten über das Tagesgeschehen in Österreich ist sehr gering `r skimr::inline_hist(data_know_austria$knowledge_austria, n_bins = 6)` (`r describe.mean.sd(data_know_austria$knowledge_austria)`).
+Gerade einmal `r data_know_austria %>% filter(knowledge_austria > 2) %>% count() %>% as.character()` von `r user` Befragten geben an, dass sie mindestens etwas Ahnung vom österreichischen Tagesgeschehen haben.
+
+## Anlernen
+
+```{r Anlernen_describe}
+
+mrg_anlern_boxplot <- data_anlernen %>% sjlabelled::remove_all_labels()
+mrg_anlern_boxplot_ges <-  pivot_longer(mrg_anlern_boxplot, cols = c("Anlernen_ArticleReview_diversity",
+                                                                "Anlernen_ArticleReview_novelty",
+                                                                "Anlernen_ArticleReview_serendipity",
+                                                                "Anlernen_SUM_bew",
+                                                                "Anlernen_ArticleReview_quality"), names_to = "Konstrukt", values_to = "Werte")
+
+mrg_anlern_boxplot_rel <-  pivot_longer(mrg_anlern_boxplot, cols = c("Anlernen_ArticleReview_relevance"), names_to = "Konstrukt", values_to = "Werte")
+
+
+box_anlern <- ggstatsplot::ggbetweenstats(data =mrg_anlern_boxplot_ges, 
+                            x = Konstrukt, 
+                            y = Werte, 
+                            xlab = "",
+                            ylab = "",
+                            title = "Anlernen",
+                            sort = "ascending", # ordering groups along the x-axis based on
+                            sort.fun = mean, # values of `y` variable
+                            point.jitter.width = 0.8, 
+                            point.jitter.height = 0.18,
+                            ggtheme = ggplot2::theme_light(),
+                            results.subtitle = FALSE,
+                            messages = F,
+                            palette = "Set1",
+                            ggstatsplot.layer = FALSE) +
+                            coord_cartesian() +
+                            scale_x_discrete(labels = c("Durchschnittliche \n Artikelbewertung","Qualität", "Zufälligkeit", "Neuheit", "Vielfalt")) +
+                            scale_y_continuous(breaks = seq(1, 6, by = 1))
+
+box_anlern_rel <- ggstatsplot::ggbetweenstats(data =mrg_anlern_boxplot_rel, 
+                            x = Konstrukt, 
+                            y = Werte, 
+                            xlab = "",
+                            ylab = "",
+                            title = "",
+                            sort = "ascending", # ordering groups along the x-axis based on
+                            sort.fun = mean, # values of `y` variable
+                            point.jitter.width = 0.8, 
+                            point.jitter.height = 0.18,
+                            ggtheme = ggplot2::theme_light(),
+                            results.subtitle = FALSE,
+                            messages = F,
+                            palette = "Dark2",
+                            ggstatsplot.layer = FALSE) +
+                            coord_cartesian() +
+                            scale_x_discrete(labels = c("Relevanz \n ")) +
+                            scale_y_continuous(breaks = seq(1, 6, by = 1))
+
+```
+Die Befragten haben die präsentierten Empfehlungen während des Anlernes durchschnittlich bewertet (`r describe.mean.sd(data_anlernen$Anlernen_SUM_bew)`). Auch bei der anschließenden übergreifenden Bewertung des Anlernprozess, wurde dieser durchschnittlich bewertet (`r describe.mean.sd(data_anlernen$Anlernen_ArticleReview_quality)`).
+
+Weitere Ergebnisse:
+
+- Empfundene Vielfalt: (`r describe.mean.sd(data_anlernen$Anlernen_ArticleReview_diversity) `)
+- Empfundene Neuheit:  (`r describe.mean.sd(data_anlernen$Anlernen_ArticleReview_novelty) `)
+- Empfundene Überraschung:  (`r describe.mean.sd(data_anlernen$Anlernen_ArticleReview_serendipity) `)
+- Empfundene Relevanz: (`r describe.mean.sd(data_anlernen$Anlernen_ArticleReview_relevance) `)
+- Empfundene Qualität:  (`r describe.mean.sd(data_anlernen$Anlernen_ArticleReview_quality) `)
+- Durchschnittliche Artikelbewertung: (`r  describe.mean.sd(data_anlernen$Anlernen_SUM_bew) `)
+
+## UBCF
+```{r UBCF_describe}
+mrg_UBCF_boxplot <- data_UBCF %>% sjlabelled::remove_all_labels()
+mrg_UBCF_boxplot_ges <-  pivot_longer(mrg_UBCF_boxplot, cols = c("UBCF_ArticleReview_diversity",
+                                                                "UBCF_ArticleReview_novelty",
+                                                                "UBCF_ArticleReview_serendipity",
+                                                                "UBCF_SUM_Artikel",
+                                                                "UBCF_ArticleReview_quality"), names_to = "Konstrukt", values_to = "Werte")
+
+mrg_UBCF_boxplot_RS <-  pivot_longer(mrg_UBCF_boxplot, cols = c("UBCF_RS_bew"), names_to = "Konstrukt", values_to = "Werte")
+
+box_UBCF <- ggstatsplot::ggbetweenstats(data =mrg_UBCF_boxplot_ges, 
+                            x = Konstrukt, 
+                            y = Werte, 
+                            xlab = "",
+                            ylab = "",
+                            title = "UBCF",
+                            sort = "ascending", # ordering groups along the x-axis based on
+                            sort.fun = mean, # values of `y` variable
+                            point.jitter.width = 0.8, 
+                            point.jitter.height = 0.18,
+                            ggtheme = ggplot2::theme_light(),
+                            results.subtitle = FALSE,
+                            palette = "Set1",
+                            messages = F,
+                            ggstatsplot.layer = FALSE) +
+                            coord_cartesian() +
+                            scale_x_discrete(labels = c("Durchschnittliche \n Artikelbewertung", "Qualität","Zufälligkeit", "Neuheit", "Vielfalt")) +
+                            scale_y_continuous(breaks = seq(1, 6, by = 1))
+
+box_UBCF_RS <- ggstatsplot::ggbetweenstats(data =mrg_UBCF_boxplot_RS, 
+                            x = Konstrukt, 
+                            y = Werte, 
+                            xlab = "",
+                            ylab = "",
+                            title = "",
+                            sort = "ascending", # ordering groups along the x-axis based on
+                            sort.fun = mean, # values of `y` variable
+                            point.jitter.width = 0.8, 
+                            point.jitter.height = 0.18,
+                            ggtheme = ggplot2::theme_light(),
+                            results.subtitle = FALSE,
+                            palette = "PiYG",
+                            messages = F,
+                            ggstatsplot.layer = FALSE) +
+                            coord_cartesian(ylim =(1:6), expand = T) +
+                            scale_x_discrete(labels = c("Bewertung  \n  UBCF")) +
+                            scale_y_continuous(breaks = seq(1, 6, by = 1))
+```
+
+Die Befragten haben die empfohlenen Artikel des UBCF-Empfehlungssystem im Durchschnitt mittelmäßig bewertet (`r describe.mean.sd(data_UBCF$UBCF_SUM_Artikel)`). Auch die übergreifende Bewertung der Artikel (`r describe.mean.sd(data_UBCF$UBCF_ArticleReview_quality)`) zeigte ein ähnliches Bild. Die Bewertung des Empfehlungssystems an sich (`r describe.mean.sd(data_UBCF$UBCF_RS_bew)`) fiel hingegen leicht negativ aus.
+
+Weitere Daten:
+
+- Wahrgenommene Neuheit: (`r describe.mean.sd(data_UBCF$UBCF_ArticleReview_novelty) `)
+- Wahrgenommene Überraschung: (`r describe.mean.sd(data_UBCF$UBCF_ArticleReview_serendipity) `)
+
+## SVD
+```{r SVD_describe}
+data_SVD %>% select(-ResponseId) %>%  psych::pairs.panels(hist.col="skyblue")
+data_SVD %>% select(-ResponseId) %>%  psych::corr.test()
+
+mrg_SVD_boxplot <- data_SVD %>% sjlabelled::remove_all_labels()
+mrg_SVD_boxplot_ges <-  pivot_longer(mrg_SVD_boxplot, cols = c("SVD_ArticleReview_diversity",
+                                                                "SVD_ArticleReview_novelty",
+                                                                "SVD_ArticleReview_serendipity",
+                                                                "SVD_SUM_Artikel",
+                                                                "SVD_ArticleReview_quality"), names_to = "Konstrukt", values_to = "Werte")
+
+mrg_SVD_boxplot_rel <-  pivot_longer(mrg_SVD_boxplot, cols = c("SVD_ArticleReview_relevance"), names_to = "Konstrukt", values_to = "Werte")
+
+mrg_SVD_boxplot_RS <-  pivot_longer(mrg_SVD_boxplot, cols = c("SVD_RS_bew"), names_to = "Konstrukt", values_to = "Werte")
+
+box_SVD <- ggstatsplot::ggbetweenstats(data =mrg_SVD_boxplot_ges, 
+                            x = Konstrukt, 
+                            y = Werte, 
+                            xlab = "",
+                            ylab = "",
+                            title = "SVD",
+                            sort = "ascending", # ordering groups along the x-axis based on
+                            sort.fun = mean, # values of `y` variable
+                            point.jitter.width = 0.8, 
+                            point.jitter.height = 0.18,
+                            ggtheme = ggplot2::theme_light(),
+                            palette = "Set1",
+                            results.subtitle = FALSE,
+                            messages = F,
+                            ggstatsplot.layer = FALSE) +
+                            coord_cartesian() +
+                            scale_x_discrete(labels = c("Durchschnittliche \n Artikelbewertung", "Qualität","Zufälligkeit", "Neuheit", "Vielfalt")) +
+                            scale_y_continuous(breaks = seq(1, 6, by = 1))
+
+box_SVD_rel <- ggstatsplot::ggbetweenstats(data =mrg_SVD_boxplot_rel, 
+                            x = Konstrukt, 
+                            y = Werte, 
+                            xlab = "",
+                            ylab = "",
+                            title = "",
+                            sort = "ascending", # ordering groups along the x-axis based on
+                            sort.fun = mean, # values of `y` variable
+                            point.jitter.width = 0.8, 
+                            point.jitter.height = 0.18,
+                            ggtheme = ggplot2::theme_light(),
+                            results.subtitle = FALSE,
+                            palette = "Dark2",
+                            messages = F,
+                            ggstatsplot.layer = FALSE) +
+                            coord_cartesian() +
+                            scale_x_discrete(labels = c("Relevanz \n ")) +
+                            scale_y_continuous(breaks = seq(1, 6, by = 1))
+
+box_SVD_RS <- ggstatsplot::ggbetweenstats(data =mrg_SVD_boxplot_RS, 
+                            x = Konstrukt, 
+                            y = Werte, 
+                            xlab = "",
+                            ylab = "",
+                            title = "",
+                            sort = "ascending", # ordering groups along the x-axis based on
+                            sort.fun = mean, # values of `y` variable
+                            point.jitter.width = 0.8, 
+                            point.jitter.height = 0.18,
+                            ggtheme = ggplot2::theme_light(),
+                            results.subtitle = FALSE,
+                            palette = "PiYG",
+                            messages = F,
+                            ggstatsplot.layer = FALSE) +
+                            coord_cartesian(ylim =(1:6), expand = T) +
+                            scale_x_discrete(labels = c("Bewertung \n SVD")) +
+                            scale_y_continuous(breaks = seq(1, 6, by = 1))
+
+gridExtra::grid.arrange(box_anlern, box_anlern_rel, box_UBCF, box_UBCF_RS, box_SVD, box_SVD_RS, box_SVD_rel, layout_matrix = rbind(c(1,1,1,1,1,NA,2),c(3,3,3,3,3,4,NA),c(5,5,5,5,5,6,7)))
+
+```
+
+Die Befragten haben die empfohlenen Artikel des SVD-Empfehlungssystem im Durchschnitt leicht negativ bewertet (`r describe.mean.sd(data_SVD$SVD_SUM_Artikel)`). Die übergreifende Bewertung der Artikel (`r describe.mean.sd(data_SVD$SVD_ArticleReview_quality)`) fiel etwas besser aus. Die Bewertung des Empfehlungssystems an sich (`r describe.mean.sd(data_SVD$SVD_RS_bew)`) fiel hingegen wieder leicht negativ aus.
+
+Weitere nutzerzentrische Kriterien:
+
+- (`r describe.mean.sd(data_SVD$SVD_ArticleReview_diversity)`)
+- (`r describe.mean.sd(data_SVD$SVD_ArticleReview_novelty)`)
+- (`r describe.mean.sd(data_SVD$SVD_ArticleReview_serendipity)`)
+- (`r describe.mean.sd(data_SVD$SVD_ArticleReview_relevance)`)
