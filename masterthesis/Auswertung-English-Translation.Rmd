@@ -53,7 +53,7 @@ testB <- data_article_UBCF %>% group_by(ResponseId) %>%
   mutate(Artikel = str_remove(Artikel, "_1")) %>%
   mutate(Post_Prediction = str_remove(Post_Prediction, "post_pred_A")) %>%
   mutate(Post_Prediction = str_remove(Post_Prediction, "_round")) %>%
-  filter (Artikel == Post_Prediction) %>%
+  filter(Artikel == Post_Prediction) %>%
   select(ResponseId, Artikel, User_Bewertung, RS_Post_Prediction)
 
 testC <- inner_join(test, testB, by = c("ResponseId","Artikel","User_Bewertung"))
