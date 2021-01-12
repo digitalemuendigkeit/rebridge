@@ -24,7 +24,7 @@ library(apastats)
 ```
 
 ```{r read_data}
-
+raw <- read_sav(file = here::here("rawdata", "191118-data.sav"))
 data_cleaned <- read_rds(file = here::here("data", "data_cleaned.rds"))
 data_demograph <- read_rds(file = here::here("data", "data_demograph.rds"))
 data_know_austria <- read_rds(file = here::here("data", "data_know_austria.rds"))

@@ -11,7 +11,7 @@ output:
   pdf_document: default
 ---
 
-An der Umfrage haben insgesamt `r length(raw$ResponseId)` Personen teilgenommen. Davon haben `r length(data_cleaned$ResponseId)` Personen die Umfrage vollständig abgeschlossen und werden in der folgenden Auswertung berücksichtigt. Dies entspricht einer Abbrecherquote von `r (1 - length(data_demograph$ResponseId)/length(raw$ResponseId))*100` %.
+
 
 ```{r setupTMP, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -23,8 +23,12 @@ library(haven)
 #library(knitr)
 library(apastats)
 library(viridis)
+
+data_cleaned <- read_rds(file = here::here("data", "data_cleaned.rds"))
+data_demograph <- read_rds(file = here::here("data", "data_demograph.rds"))
 ```
 
+An der Umfrage haben insgesamt `r length(raw$ResponseId)` Personen teilgenommen. Davon haben `r length(data_cleaned$ResponseId)` Personen die Umfrage vollständig abgeschlossen und werden in der folgenden Auswertung berücksichtigt. Dies entspricht einer Abbrecherquote von `r (1 - length(data_demograph$ResponseId)/length(raw$ResponseId))*100` %.
 
 ## Geschlecht
 ```{r  gender_graph}
@@ -60,14 +64,14 @@ Die Teilnehmer der Umfrage waren`r skimr::inline_hist(data_demograph$gender, n_b
 ```{r age_graph}
 
 # Grafische Darstellung
-data_demograph  %>% ggplot() + 
-                    aes(x = as.numeric(age), 
-                        fill = factor(gender)) + 
-                    geom_histogram(position = "stack", binwidth = 2) + 
-                    xlab("Alter") + 
-                    ylab("Anzahl") + 
-                    scale_fill_discrete(name="Geschlecht",
-                                        labels=c("männlich", "weiblich"))
+data_demograph  %>% ggplot() +
+  aes(x = as.numeric(age),
+      fill = factor(gender)) +
+  geom_histogram(position = "stack", binwidth = 2) +
+  xlab("Alter") +
+  ylab("Anzahl") +
+  scale_fill_discrete(name = "Geschlecht",
+                      labels = c("männlich", "weiblich"))
 
 #wilcox.test(data_demograph$age ~ data_demograph$gender)
 ```
@@ -77,29 +81,44 @@ Es besteht dabei kein signifikanter Altersunterschied zwischen den Geschlechtern
 
 ## Schulbildung
 ```{r school_graph}
-a <- data_demograph  %>% ggplot(aes(x = school, 
-                               y = ..prop..,
-                               fill = factor(gender))) + 
-                    geom_bar(position = "dodge2") + 
-                    geom_text(aes(label = scales::percent(x = ..prop.., accuracy = 1), y= ..prop..),
-                              stat= "count", 
-                              position = position_dodge(width = 1), 
-                              vjust = -0.2,
-                              size = 2.5) +
-                    labs(y = "Anteil in %", x="Schulabschluss") +
-                    scale_fill_manual(values = c("skyblue","royalblue"),
-                                      name="Geschlecht",
-                                      labels=c("männlich", "weiblich")) +
-                    guides(fill = guide_legend(reverse = TRUE)) +
-                    coord_cartesian(ylim=c(0,0.8))+
-                    theme_minimal() +
-                    theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
-                    scale_x_continuous(breaks = 1:5,labels = c("keine Schul- \n ausbildung",
-                                                            "Volks-/Haupschul- \n abschluss",
-                                                            "Realschul- \n abschluss",
-                                                            "(Fach-)Abitur",
-                                                            "Sonstiges")) +
-                    scale_y_continuous(labels = scales::percent)
+a <- data_demograph  %>% ggplot(aes(
+  x = school,
+  y = ..prop..,
+  fill = factor(gender)
+)) +
+  geom_bar(position = "dodge2") +
+  geom_text(
+    aes(
+      label = scales::percent(x = ..prop.., accuracy = 1),
+      y = ..prop..
+    ),
+    stat = "count",
+    position = position_dodge(width = 1),
+    vjust = -0.2,
+    size = 2.5
+  ) +
+  labs(y = "Anteil in %", x = "Schulabschluss") +
+  scale_fill_manual(
+    values = c("skyblue", "royalblue"),
+    name = "Geschlecht",
+    labels = c("männlich", "weiblich")
+  ) +
+  guides(fill = guide_legend(reverse = TRUE)) +
+  coord_cartesian(ylim = c(0, 0.8)) +
+  coord_flip() +
+  theme_minimal() +
+  #theme(axis.text.x = element_text(angle = 60, hjust = 1)) +
+  scale_x_continuous(
+    breaks = 1:5,
+    labels = c(
+      "keine Schul- \n ausbildung",
+      "Volks-/Haupschul- \n abschluss",
+      "Realschul- \n abschluss",
+      "(Fach-)Abitur",
+      "Sonstiges"
+    )
+  ) +
+  scale_y_continuous(labels = scales::percent)
 
 ```
 
