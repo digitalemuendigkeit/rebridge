@@ -16,8 +16,6 @@ knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(haven)
 library(sjlabelled)
-#library(kableExtra)
-#library(knitr)
 library(apastats)
 library(magrittr)
 ```
@@ -169,7 +167,7 @@ data_topicSelect$interestingTopic[is.na(data_topicSelect$interestingTopic)] <- 9
 ```
 
 
-```{r}
+```{r write_data_files}
 
 write_rds(data_cleaned, file = here::here("data", "data_cleaned.rds"))
 write_rds(data_demograph, file = here::here("data", "data_demograph.rds"))
